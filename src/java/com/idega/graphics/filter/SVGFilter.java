@@ -1,8 +1,11 @@
 /*
- * Created on 18.7.2004
+ * $Id: SVGFilter.java,v 1.4 2005/01/20 12:53:31 tryggvil Exp $
+ * Created on 18.7.2004 by Tryggvi Larusson
  *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
+ * Copyright (C) 2004-2005 Idega Software hf. All Rights Reserved.
+ *
+ * This software is the proprietary information of Idega hf.
+ * Use is subject to license terms.
  */
 package com.idega.graphics.filter;
 
@@ -16,11 +19,16 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+
 /**
- * @author tryggvil
+ * <p>
+ * Filter that acts as a renderer of SVG files and uses Batik to render either a PNG or JPEG image.<br>
+ * This filter is mapped by default on urls with the patterns *.svg,*.svg.jsp and *.svg.jspx
+ * </p>
+ *  Last modified: $Date: 2005/01/20 12:53:31 $ by $Author: tryggvil $
  * 
- * TODO To change the template for this generated type comment go to Window -
- * Preferences - Java - Code Style - Code Templates
+ * @author <a href="mailto:tryggvil@idega.com">Tryggvi Larusson</a>
+ * @version $Revision: 1.4 $
  */
 public class SVGFilter implements Filter {
 	
