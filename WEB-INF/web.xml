@@ -11,9 +11,16 @@
   		<filter-class>com.idega.graphics.filter.SVGFilter</filter-class>
   	</filter>
  
+    <!-- Disabled for now: should be avoided as some browsers accept viewing svg natively
   	<filter-mapping>
  	   	<filter-name>SVGFilter</filter-name>
   		<url-pattern>*.svg</url-pattern>
+  	</filter-mapping>
+  	-->
+    <!-- This is the default type for rendering out to PNG -->
+  	<filter-mapping>
+ 	   	<filter-name>SVGFilter</filter-name>
+  		<url-pattern>*.psvg</url-pattern>
   	</filter-mapping>
   	<filter-mapping>
  	   	<filter-name>SVGFilter</filter-name>

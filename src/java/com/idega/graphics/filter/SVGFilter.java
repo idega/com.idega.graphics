@@ -1,5 +1,5 @@
 /*
- * $Id: SVGFilter.java,v 1.6 2005/01/26 03:26:07 tryggvil Exp $
+ * $Id: SVGFilter.java,v 1.7 2005/02/01 00:56:12 tryggvil Exp $
  * Created on 18.7.2004 by Tryggvi Larusson
  *
  * Copyright (C) 2004-2005 Idega Software hf. All Rights Reserved.
@@ -23,12 +23,13 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * <p>
  * Filter that acts as a renderer of SVG files and uses Batik to render either a PNG or JPEG image.<br>
- * This filter is mapped by default on urls with the patterns *.svg,*.jsvg,*.svg.jsp and *.svg.jspx
+ * This filter is mapped by default on urls with the patterns *.psvg and *.jsvg , and the default behaviour is to try
+ * to render the image out to PNG even if the browser accepts viewing svg.
  * </p>
- *  Last modified: $Date: 2005/01/26 03:26:07 $ by $Author: tryggvil $
+ *  Last modified: $Date: 2005/02/01 00:56:12 $ by $Author: tryggvil $
  * 
  * @author <a href="mailto:tryggvil@idega.com">Tryggvi Larusson</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class SVGFilter implements Filter {
 	
