@@ -74,22 +74,6 @@
       <properties/>
     </dependency>
     <dependency>
-      <groupId>myfaces</groupId>
-      <artifactId>myfaces</artifactId>
-      <version>1.0.5</version>
-      <type>jar</type>
-      <url>http://myfaces.org/</url>
-      <properties/>
-    </dependency>
-    <dependency>
-      <groupId>smile</groupId>
-      <artifactId>smile</artifactId>
-      <version>0.3.2</version>
-      <type>jar</type>
-      <url>http://smile.sourceforge.net/</url>
-      <properties/>
-    </dependency>
-    <dependency>
       <groupId>batik</groupId>
       <artifactId>batik</artifactId>
       <version>1.5</version>

@@ -17,10 +17,6 @@
   </classpathentry>
   <classpathentry kind="var" path="MAVEN_REPO/myfaces/jars/jsf-api-1.0.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/myfaces/jars/myfaces-1.0.5.jar">
-  </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/smile/jars/smile-0.3.2.jar">
-  </classpathentry>
   <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-1.5.jar">
   </classpathentry>
   <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-rasterizer-1.5.jar">
