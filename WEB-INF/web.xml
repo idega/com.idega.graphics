@@ -13,15 +13,15 @@
  
   	<filter-mapping>
  	   	<filter-name>SVGFilter</filter-name>
-  		<url-pattern>.svg</url-pattern>
+  		<url-pattern>*.svg</url-pattern>
   	</filter-mapping>
   	<filter-mapping>
  	   	<filter-name>SVGFilter</filter-name>
-  		<url-pattern>.svg.jsp</url-pattern>
+  		<url-pattern>*.svg.jsp</url-pattern>
   	</filter-mapping>
   	<filter-mapping>
  	   	<filter-name>SVGFilter</filter-name>
-  		<url-pattern>.svg.jspx</url-pattern>
+  		<url-pattern>*.svg.jspx</url-pattern>
   	</filter-mapping>  	
   	
 </web-app>
