@@ -6,8 +6,8 @@ package com.idega.graphics.filter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
@@ -17,18 +17,20 @@ import javax.servlet.http.HttpServletResponseWrapper;
 public class SVGFilterResponseWrapper extends HttpServletResponseWrapper {
 
 	protected HttpServletResponse origResponse = null;
+	protected HttpServletRequest request;
 	protected ServletOutputStream stream = null;
 	protected PrintWriter writer = null;
 	private String outputFormat;
 
-	public SVGFilterResponseWrapper(HttpServletResponse response,String outputFormat) {
+	public SVGFilterResponseWrapper(HttpServletResponse response,HttpServletRequest request,String outputFormat) {
 		super(response);
+		this.request=request;
 		origResponse = response;
 		this.outputFormat=outputFormat;
 	}
 
 	public ServletOutputStream createOutputStream() throws IOException {
-		return (new SVGFilterResponseStream(origResponse,outputFormat));
+		return (new SVGFilterResponseStream(origResponse,request,outputFormat));
 	}
 
 	public void finishResponse() {

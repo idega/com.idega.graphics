@@ -22,6 +22,16 @@
   	<filter-mapping>
  	   	<filter-name>SVGFilter</filter-name>
   		<url-pattern>*.svg.jspx</url-pattern>
-  	</filter-mapping>  	
+  	</filter-mapping>
+
+	<!-- special mappings for server side generated jsp svg files:-->
+    	<servlet-mapping>
+        	<servlet-name>jsp</servlet-name>
+        	<url-pattern>*.jsvg</url-pattern>
+    	</servlet-mapping>
+  	<filter-mapping>
+ 	   	<filter-name>SVGFilter</filter-name>
+  		<url-pattern>*.jsvg</url-pattern>
+  	</filter-mapping>
   	
 </web-app>

@@ -5,9 +5,8 @@ package com.idega.graphics.filter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
@@ -24,13 +23,15 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 	protected ByteArrayOutputStream buffer = null;
 	protected boolean closed = false;
 	protected HttpServletResponse response = null;
+	protected HttpServletRequest request;
 	protected ServletOutputStream output = null;
 	protected String outputFormat=SVGFilter.FORMAT_PNG;
 
-	public SVGFilterResponseStream(HttpServletResponse response,String outputFormat) throws IOException {
+	public SVGFilterResponseStream(HttpServletResponse response,HttpServletRequest request,String outputFormat) throws IOException {
 		super();
 		closed = false;
 		this.response = response;
+		this.request = request;
 		this.output = response.getOutputStream();
 		//baos = new ByteArrayOutputStream();
 		//gzipstream = new GZIPOutputStream(baos);
@@ -44,8 +45,8 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		}
 		//gzipstream.finish();
 
-		byte[] bytes = buffer.toByteArray();
-		String svgString = new String(bytes);
+		//byte[] bytes = buffer.toByteArray();
+		//String svgString = new String(bytes);
 		
 		
 		//response.addHeader("Content-Length", Integer.toString(bytes.length));
@@ -53,13 +54,13 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		//response.addHeader("Content-Encoding", "gzip");
 		
 		if(outputFormat.equals(SVGFilter.FORMAT_PNG)){
-			emitPNG(output,svgString);
+			emitPNG(output);
 		}
-		else if(outputFormat.equals(SVGFilter.FORMAT_SVG)){
-			emitSVG(output,svgString);
-		}
+		//else if(outputFormat.equals(SVGFilter.FORMAT_SVG)){
+		//	emitSVG(output);
+		//}
 		else if(outputFormat.equals(SVGFilter.FORMAT_JPEG)){
-			emitJPEG(output,svgString);
+			emitJPEG(output);
 		}		
 		
 		/*output.write(bytes);
@@ -68,11 +69,12 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		closed = true;
 	}
 	
-	
-	public void emitPNG(ServletOutputStream output, String svgString) {
+	public void emitPNG(ServletOutputStream output) {
 		response.setContentType("image/png");
 		PNGTranscoder t = new PNGTranscoder();
-		TranscoderInput input = new TranscoderInput(new StringReader(svgString));
+		//TranscoderInput input = new TranscoderInput(new StringReader(svgString));
+		String requestUri = getRequestedUri();
+		TranscoderInput input = new TranscoderInput(requestUri);
 		try {
 			TranscoderOutput tOutput = new TranscoderOutput(output);
 			t.transcode(input, tOutput);
@@ -83,10 +85,12 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		}
 	}
 
-	public void emitJPEG(ServletOutputStream output, String svgString) {
+	public void emitJPEG(ServletOutputStream output) {
 		response.setContentType("image/jpeg");
 		JPEGTranscoder t = new JPEGTranscoder();
-		TranscoderInput input = new TranscoderInput(new StringReader(svgString));
+		String requestUri = getRequestedUri();
+		TranscoderInput input = new TranscoderInput(requestUri);
+		//TranscoderInput input = new TranscoderInput(new StringReader(svgString));
 		try {
 			TranscoderOutput tOutput = new TranscoderOutput(output);
 			t.transcode(input, tOutput);
@@ -97,6 +101,7 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		}
 	}	
 	
+	/*
 	public void emitSVG(ServletOutputStream output, String svgString) {
 		response.setContentType("image/svg+xml");
 		try {
@@ -112,7 +117,12 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}	
+	}*/
+	
+	protected String getRequestedUri(){
+		StringBuffer url = request.getRequestURL();
+		return url.toString();
+	}
 	
 	public void flush() throws IOException {
 		if (closed) {
