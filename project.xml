@@ -111,6 +111,86 @@
     </dependency>
     <dependency>
       <groupId>batik</groupId>
+      <artifactId>batik-dom</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-css</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>  
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-transcoder</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-bridge</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>  
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-gvt</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-svg-dom</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-util</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-ext</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
       <artifactId>batik-xml</artifactId>
       <version>1.5</version>
       <type>jar</type>
@@ -121,14 +201,14 @@
     </dependency>
     <dependency>
       <groupId>batik</groupId>
-      <artifactId>batik-transcoder</artifactId>
+      <artifactId>batik-script</artifactId>
       <version>1.5</version>
       <type>jar</type>
       <url>http://xml.apache.org/batik/</url>
       <properties>
         <idegaweb.bundle.include>true</idegaweb.bundle.include>
       </properties>
-    </dependency>       
+    </dependency> 
   </dependencies>
   <build>
     <sourceDirectory>src/java</sourceDirectory>
