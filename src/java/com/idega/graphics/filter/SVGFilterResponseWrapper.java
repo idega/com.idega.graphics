@@ -19,14 +19,16 @@ public class SVGFilterResponseWrapper extends HttpServletResponseWrapper {
 	protected HttpServletResponse origResponse = null;
 	protected ServletOutputStream stream = null;
 	protected PrintWriter writer = null;
+	private String outputFormat;
 
-	public SVGFilterResponseWrapper(HttpServletResponse response) {
+	public SVGFilterResponseWrapper(HttpServletResponse response,String outputFormat) {
 		super(response);
 		origResponse = response;
+		this.outputFormat=outputFormat;
 	}
 
 	public ServletOutputStream createOutputStream() throws IOException {
-		return (new SVGFilterResponseStream(origResponse));
+		return (new SVGFilterResponseStream(origResponse,outputFormat));
 	}
 
 	public void finishResponse() {

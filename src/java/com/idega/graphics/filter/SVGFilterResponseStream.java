@@ -10,6 +10,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.JPEGTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 
 /**
@@ -23,9 +24,9 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 	protected boolean closed = false;
 	protected HttpServletResponse response = null;
 	protected ServletOutputStream output = null;
-	protected String bitmapType="png";
+	protected String outputFormat=SVGFilter.FORMAT_PNG;
 
-	public SVGFilterResponseStream(HttpServletResponse response) throws IOException {
+	public SVGFilterResponseStream(HttpServletResponse response,String outputFormat) throws IOException {
 		super();
 		closed = false;
 		this.response = response;
@@ -33,6 +34,7 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		//baos = new ByteArrayOutputStream();
 		//gzipstream = new GZIPOutputStream(baos);
 		buffer = new ByteArrayOutputStream();
+		this.outputFormat=outputFormat;
 	}
 
 	public void close() throws IOException {
@@ -49,7 +51,15 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		//response.setContentType("image/png");
 		//response.addHeader("Content-Encoding", "gzip");
 		
-		emitPNG(output,svgString);
+		if(outputFormat.equals(SVGFilter.FORMAT_PNG)){
+			emitPNG(output,svgString);
+		}
+		else if(outputFormat.equals(SVGFilter.FORMAT_SVG)){
+			emitSVG(output,svgString);
+		}
+		else if(outputFormat.equals(SVGFilter.FORMAT_JPEG)){
+			emitJPEG(output,svgString);
+		}		
 		
 		/*output.write(bytes);
 		output.flush();
@@ -72,6 +82,30 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		}
 	}
 
+	public void emitJPEG(ServletOutputStream output, String svgString) {
+		response.setContentType("image/jpeg");
+		JPEGTranscoder t = new JPEGTranscoder();
+		TranscoderInput input = new TranscoderInput(new StringReader(svgString));
+		try {
+			TranscoderOutput tOutput = new TranscoderOutput(output);
+			t.transcode(input, tOutput);
+			output.flush();
+			output.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}	
+	
+	public void emitSVG(ServletOutputStream output, String svgString) {
+		response.setContentType("image/svg+xml");
+		try {
+			response.getWriter().write(svgString);
+			response.getWriter().flush();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}	
+	
 	public void flush() throws IOException {
 		if (closed) {
 			throw new IOException("Cannot flush a closed output stream");

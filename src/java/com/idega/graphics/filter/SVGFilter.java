@@ -24,6 +24,10 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class SVGFilter implements Filter {
 	
+	public static final String FORMAT_PNG = "png";
+	public static final String FORMAT_SVG = "svg";
+	public static final String FORMAT_JPEG = "jpg";
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -56,7 +60,8 @@ public class SVGFilter implements Filter {
 			//String ae = request.getHeader("accept-encoding");
 			//if (ae != null && ae.indexOf("gzip") != -1) {
 				//System.out.println("GZIP supported, compressing.");
-				SVGFilterResponseWrapper wrappedResponse = new SVGFilterResponseWrapper(response);
+				String outputFormat = getOutputFormatForClient(req);
+				SVGFilterResponseWrapper wrappedResponse = new SVGFilterResponseWrapper(response,outputFormat);
 				chain.doFilter(req, wrappedResponse);
 				wrappedResponse.finishResponse();
 				//return;
@@ -65,16 +70,15 @@ public class SVGFilter implements Filter {
 		}
 	}
 
-	public void emitSVG(HttpServletRequest request,
-			HttpServletResponse response, String svgString) {
-		response.setContentType("image/svg+xml");
-		try {
-			response.getWriter().write(svgString);
-			response.getWriter().flush();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	/**
+	 * @param req
+	 * @return
+	 */
+	private String getOutputFormatForClient(ServletRequest req) {
+		// TODO implement the detection
+		return FORMAT_PNG;
 	}
+
 
 	/*
 	public void emitJPG(HttpServletRequest request,
