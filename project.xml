@@ -208,7 +208,27 @@
       <properties>
         <idegaweb.bundle.include>true</idegaweb.bundle.include>
       </properties>
-    </dependency> 
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-awt-util</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-parser</artifactId>
+      <version>1.5</version>
+      <type>jar</type>
+      <url>http://xml.apache.org/batik/</url>
+      <properties>
+        <idegaweb.bundle.include>true</idegaweb.bundle.include>
+      </properties>
+    </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src/java</sourceDirectory>

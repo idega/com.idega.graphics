@@ -45,6 +45,10 @@
   </classpathentry>
   <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-script-1.5.jar">
   </classpathentry>
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-awt-util-1.5.jar">
+  </classpathentry>
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-parser-1.5.jar">
+  </classpathentry>
   <classpathentry kind="output" path="target/classes">
   </classpathentry>
 </classpath>
