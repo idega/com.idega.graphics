@@ -1,0 +1,108 @@
+/*
+ * Created on 18.7.2004
+ */
+package com.idega.graphics.filter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
+
+/**
+ * @author tryggvil
+ */
+public class SVGFilterResponseStream extends ServletOutputStream {
+
+	//protected ByteArrayOutputStream baos = null;
+	//protected GZIPOutputStream gzipstream = null;
+	protected ByteArrayOutputStream buffer = null;
+	protected boolean closed = false;
+	protected HttpServletResponse response = null;
+	protected ServletOutputStream output = null;
+	protected String bitmapType="png";
+
+	public SVGFilterResponseStream(HttpServletResponse response) throws IOException {
+		super();
+		closed = false;
+		this.response = response;
+		this.output = response.getOutputStream();
+		//baos = new ByteArrayOutputStream();
+		//gzipstream = new GZIPOutputStream(baos);
+		buffer = new ByteArrayOutputStream();
+	}
+
+	public void close() throws IOException {
+		if (closed) {
+			throw new IOException("This output stream has already been closed");
+		}
+		//gzipstream.finish();
+
+		byte[] bytes = buffer.toByteArray();
+		String svgString = new String(bytes);
+		
+		
+		//response.addHeader("Content-Length", Integer.toString(bytes.length));
+		//response.setContentType("image/png");
+		//response.addHeader("Content-Encoding", "gzip");
+		
+		emitPNG(output,svgString);
+		
+		/*output.write(bytes);
+		output.flush();
+		output.close();*/
+		closed = true;
+	}
+	
+	
+	public void emitPNG(ServletOutputStream output, String svgString) {
+		response.setContentType("image/png");
+		PNGTranscoder t = new PNGTranscoder();
+		TranscoderInput input = new TranscoderInput(new StringReader(svgString));
+		try {
+			TranscoderOutput tOutput = new TranscoderOutput(output);
+			t.transcode(input, tOutput);
+			output.flush();
+			output.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void flush() throws IOException {
+		if (closed) {
+			throw new IOException("Cannot flush a closed output stream");
+		}
+		buffer.flush();
+	}
+
+	public void write(int b) throws IOException {
+		if (closed) {
+			throw new IOException("Cannot write to a closed output stream");
+		}
+		buffer.write((byte) b);
+	}
+
+	public void write(byte b[]) throws IOException {
+		write(b, 0, b.length);
+	}
+
+	public void write(byte b[], int off, int len) throws IOException {
+		//System.out.println("writing...");
+		if (closed) {
+			throw new IOException("Cannot write to a closed output stream");
+		}
+		buffer.write(b, off, len);
+	}
+
+	public boolean closed() {
+		return (this.closed);
+	}
+
+	public void reset() {
+		//noop
+	}
+}
