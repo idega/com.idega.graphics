@@ -5,6 +5,7 @@ package com.idega.graphics.filter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -99,8 +100,15 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 	public void emitSVG(ServletOutputStream output, String svgString) {
 		response.setContentType("image/svg+xml");
 		try {
-			response.getWriter().write(svgString);
-			response.getWriter().flush();
+			//response.getWriter().write(svgString);
+			//response.getWriter().flush();
+			
+			OutputStreamWriter writer = new OutputStreamWriter(output);
+			writer.write(svgString);
+			//output.write(new StringReader(svgString));
+			writer.flush();
+			output.flush();
+			output.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -28,6 +28,10 @@ public class SVGFilter implements Filter {
 	public static final String FORMAT_SVG = "svg";
 	public static final String FORMAT_JPEG = "jpg";
 	
+	public static final String BATIK_USERAGENT_START="Batik";
+	public static final String JAVA_USERAGENT_START="Java";
+	
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -60,7 +64,7 @@ public class SVGFilter implements Filter {
 			//String ae = request.getHeader("accept-encoding");
 			//if (ae != null && ae.indexOf("gzip") != -1) {
 				//System.out.println("GZIP supported, compressing.");
-				String outputFormat = getOutputFormatForClient(req);
+				String outputFormat = getOutputFormatForClient(request);
 				SVGFilterResponseWrapper wrappedResponse = new SVGFilterResponseWrapper(response,outputFormat);
 				chain.doFilter(req, wrappedResponse);
 				wrappedResponse.finishResponse();
@@ -74,8 +78,17 @@ public class SVGFilter implements Filter {
 	 * @param req
 	 * @return
 	 */
-	private String getOutputFormatForClient(ServletRequest req) {
-		// TODO implement the detection
+	private String getOutputFormatForClient(HttpServletRequest request) {
+		// TODO implement better client detection
+		String userAgent = request.getHeader("User-agent");
+		if(userAgent.startsWith(BATIK_USERAGENT_START)){
+			//Special case for not rendering out to png when Batik itself is fetching the file.
+			return FORMAT_SVG;
+		}
+		else if(userAgent.startsWith(JAVA_USERAGENT_START)){
+			//Special case for not rendering out to png when Batik itself is fetching the file.
+			return FORMAT_SVG;
+		}
 		return FORMAT_PNG;
 	}
 
