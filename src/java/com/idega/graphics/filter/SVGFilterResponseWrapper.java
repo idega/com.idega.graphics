@@ -27,6 +27,14 @@ public class SVGFilterResponseWrapper extends HttpServletResponseWrapper {
 		this.request=request;
 		origResponse = response;
 		this.outputFormat=outputFormat;
+		
+		//cache the content for 3600 seconds:
+		this.addHeader("Cache-Control","max-age=3600, must-revalidate");
+		//this.addHeader("Expires","Fri, 30 Oct 2006 14:19:41 GMT");
+		//this.setHeader("Last-Modified","Fri, 30 Oct 2000 14:19:41 GMT");
+		//origResponse.setHeader("Last-Modified","Fri, 30 Oct 2000 14:19:41 GMT");
+		
+		
 	}
 
 	public ServletOutputStream createOutputStream() throws IOException {
