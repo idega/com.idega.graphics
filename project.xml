@@ -4,9 +4,8 @@
   <extend>${base.project.dir}/base-dependencies.xml</extend>
   <name>idegaWeb Graphics</name>
   <artifactId>com.idega.graphics</artifactId>
-  <currentVersion>1.0</currentVersion>
-  <!--currentVersion>1.0.1-SNAPSHOT</currentVersion-->
-
+  <!--currentVersion>1.0</currentVersion-->
+  <currentVersion>1.0.1-SNAPSHOT</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <shortDescription>idegaWeb Graphics is a Graphics toolkit</shortDescription>
   <versions>
@@ -45,12 +44,8 @@
     <dependency>
       <groupId>bundles</groupId>
       <artifactId>com.idega.core</artifactId>
-      <!--HELPER-->
-
-      <version>3.0.6</version>
-      <!--HELPER-->
-      <!--HELPERversion>SNAPSHOT</versionHELPER-->
-
+      <!--version>3.0.6</version-->
+      <version>SNAPSHOT</version>
       <type>jar</type>
       <url>http://www.idega.com/</url>
       <properties>
