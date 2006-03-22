@@ -7,33 +7,31 @@
   </classpathentry>
   <classpathentry kind="src" path="/com.idega.core">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-rasterizer-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-rasterizer-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-dom-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-dom-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-css-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-css-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-transcoder-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-transcoder-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-bridge-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-bridge-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-gvt-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-gvt-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-svg-dom-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-svg-dom-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-util-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-util-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-ext-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-ext-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-xml-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-xml-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-script-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-script-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-awt-util-1.6.jar">
   </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-awt-util-1.5.jar">
-  </classpathentry>
-  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-parser-1.5.jar">
+  <classpathentry kind="var" path="MAVEN_REPO/batik/jars/batik-parser-1.6.jar">
   </classpathentry>
   <classpathentry kind="var" path="MAVEN_REPO/servletapi/jars/servletapi-2.4.jar">
   </classpathentry>
