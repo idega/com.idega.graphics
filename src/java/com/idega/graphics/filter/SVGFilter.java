@@ -1,5 +1,5 @@
 /*
- * $Id: SVGFilter.java,v 1.7 2005/02/01 00:56:12 tryggvil Exp $
+ * $Id: SVGFilter.java,v 1.8 2006/03/22 11:42:19 tryggvil Exp $
  * Created on 18.7.2004 by Tryggvi Larusson
  *
  * Copyright (C) 2004-2005 Idega Software hf. All Rights Reserved.
@@ -26,10 +26,10 @@ import javax.servlet.http.HttpServletResponse;
  * This filter is mapped by default on urls with the patterns *.psvg and *.jsvg , and the default behaviour is to try
  * to render the image out to PNG even if the browser accepts viewing svg.
  * </p>
- *  Last modified: $Date: 2005/02/01 00:56:12 $ by $Author: tryggvil $
+ *  Last modified: $Date: 2006/03/22 11:42:19 $ by $Author: tryggvil $
  * 
  * @author <a href="mailto:tryggvil@idega.com">Tryggvi Larusson</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class SVGFilter implements Filter {
 	
@@ -67,7 +67,9 @@ public class SVGFilter implements Filter {
 			String outputFormat = getOutputFormatForClient(request);
 			if(outputFormat.equals(FORMAT_SVG)){
 				//just bypass this filter to do the default handing:
+				response.setContentType("image/svg+xml");
 				chain.doFilter(req,res);
+				response.setContentType("image/svg+xml");
 			}
 			else{
 				//else wrap the response:
@@ -84,15 +86,31 @@ public class SVGFilter implements Filter {
 	 */
 	private String getOutputFormatForClient(HttpServletRequest request) {
 		// TODO implement better client detection
-		String userAgent = request.getHeader("User-agent");
-		if(userAgent.startsWith(BATIK_USERAGENT_START)){
+		//String userAgent = request.getHeader("User-agent");
+		String accept = request.getHeader("Accept");
+		/*Enumeration enumeration = request.getHeaderNames();
+		System.out.println("SVGFilter: Printing out headers:");
+		while (enum.hasMoreElements()) {
+			String header = (String) enum.nextElement();
+			System.out.println("Header: "+header+": "+request.getHeader(header));
+		}*/
+		
+		if(accept.indexOf("svg")!=-1){
+		//if(true){
+		//if(userAgent.startsWith(BATIK_USERAGENT_START)){
 			//Special case for not rendering out to png when Batik itself is fetching the file.
 			return FORMAT_SVG;
 		}
-		else if(userAgent.startsWith(JAVA_USERAGENT_START)){
+		//else if(userAgent.startsWith(JAVA_USERAGENT_START)){
 			//Special case for not rendering out to png when Batik itself is fetching the file.
-			return FORMAT_SVG;
+		//	return FORMAT_SVG;
+		//}
+		/*else if(accept.indexOf("png")!=-1){
+			return FORMAT_PNG;
 		}
+		else{
+			return FORMAT_JPEG;
+		}*/
 		return FORMAT_PNG;
 	}
 }
