@@ -29,18 +29,18 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 
 	public SVGFilterResponseStream(HttpServletResponse response,HttpServletRequest request,String outputFormat) throws IOException {
 		super();
-		closed = false;
+		this.closed = false;
 		this.response = response;
 		this.request = request;
 		this.output = response.getOutputStream();
 		//baos = new ByteArrayOutputStream();
 		//gzipstream = new GZIPOutputStream(baos);
-		buffer = new ByteArrayOutputStream();
+		this.buffer = new ByteArrayOutputStream();
 		this.outputFormat=outputFormat;
 	}
 
 	public void close() throws IOException {
-		if (closed) {
+		if (this.closed) {
 			throw new IOException("This output stream has already been closed");
 		}
 		//gzipstream.finish();
@@ -53,24 +53,24 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 		//response.setContentType("image/png");
 		//response.addHeader("Content-Encoding", "gzip");
 		
-		if(outputFormat.equals(SVGFilter.FORMAT_PNG)){
-			emitPNG(output);
+		if(this.outputFormat.equals(SVGFilter.FORMAT_PNG)){
+			emitPNG(this.output);
 		}
 		//else if(outputFormat.equals(SVGFilter.FORMAT_SVG)){
 		//	emitSVG(output);
 		//}
-		else if(outputFormat.equals(SVGFilter.FORMAT_JPEG)){
-			emitJPEG(output);
+		else if(this.outputFormat.equals(SVGFilter.FORMAT_JPEG)){
+			emitJPEG(this.output);
 		}		
 		
 		/*output.write(bytes);
 		output.flush();
 		output.close();*/
-		closed = true;
+		this.closed = true;
 	}
 	
 	public void emitPNG(ServletOutputStream output) {
-		response.setContentType("image/png");
+		this.response.setContentType("image/png");
 		PNGTranscoder t = new PNGTranscoder();
 		//TranscoderInput input = new TranscoderInput(new StringReader(svgString));
 		String requestUri = getRequestedUri();
@@ -86,7 +86,7 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 	}
 
 	public void emitJPEG(ServletOutputStream output) {
-		response.setContentType("image/jpeg");
+		this.response.setContentType("image/jpeg");
 		JPEGTranscoder t = new JPEGTranscoder();
 		String requestUri = getRequestedUri();
 		TranscoderInput input = new TranscoderInput(requestUri);
@@ -120,22 +120,22 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 	}*/
 	
 	protected String getRequestedUri(){
-		StringBuffer url = request.getRequestURL();
+		StringBuffer url = this.request.getRequestURL();
 		return url.toString();
 	}
 	
 	public void flush() throws IOException {
-		if (closed) {
+		if (this.closed) {
 			throw new IOException("Cannot flush a closed output stream");
 		}
-		buffer.flush();
+		this.buffer.flush();
 	}
 
 	public void write(int b) throws IOException {
-		if (closed) {
+		if (this.closed) {
 			throw new IOException("Cannot write to a closed output stream");
 		}
-		buffer.write((byte) b);
+		this.buffer.write((byte) b);
 	}
 
 	public void write(byte b[]) throws IOException {
@@ -144,10 +144,10 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 
 	public void write(byte b[], int off, int len) throws IOException {
 		//System.out.println("writing...");
-		if (closed) {
+		if (this.closed) {
 			throw new IOException("Cannot write to a closed output stream");
 		}
-		buffer.write(b, off, len);
+		this.buffer.write(b, off, len);
 	}
 
 	public boolean closed() {

@@ -25,7 +25,7 @@ public class SVGFilterResponseWrapper extends HttpServletResponseWrapper {
 	public SVGFilterResponseWrapper(HttpServletResponse response,HttpServletRequest request,String outputFormat) {
 		super(response);
 		this.request=request;
-		origResponse = response;
+		this.origResponse = response;
 		this.outputFormat=outputFormat;
 		
 		//cache the content for 3600 seconds:
@@ -38,17 +38,17 @@ public class SVGFilterResponseWrapper extends HttpServletResponseWrapper {
 	}
 
 	public ServletOutputStream createOutputStream() throws IOException {
-		return (new SVGFilterResponseStream(origResponse,request,outputFormat));
+		return (new SVGFilterResponseStream(this.origResponse,this.request,this.outputFormat));
 	}
 
 	public void finishResponse() {
 		try {
-			if (writer != null) {
-				writer.close();
+			if (this.writer != null) {
+				this.writer.close();
 			}
 			else {
-				if (stream != null) {
-					stream.close();
+				if (this.stream != null) {
+					this.stream.close();
 				}
 			}
 		}
@@ -57,31 +57,32 @@ public class SVGFilterResponseWrapper extends HttpServletResponseWrapper {
 	}
 
 	public void flushBuffer() throws IOException {
-		stream.flush();
+		this.stream.flush();
 	}
 
 	public ServletOutputStream getOutputStream() throws IOException {
-		if (writer != null) {
+		if (this.writer != null) {
 			throw new IllegalStateException("getWriter() has already been called!");
 		}
 
-		if (stream == null)
-			stream = createOutputStream();
-		return (stream);
+		if (this.stream == null) {
+			this.stream = createOutputStream();
+		}
+		return (this.stream);
 	}
 
 	public PrintWriter getWriter() throws IOException {
-		if (writer != null) {
-			return (writer);
+		if (this.writer != null) {
+			return (this.writer);
 		}
 
-		if (stream != null) {
+		if (this.stream != null) {
 			throw new IllegalStateException("getOutputStream() has already been called!");
 		}
 
-		stream = createOutputStream();
-		writer = new PrintWriter(new OutputStreamWriter(stream, origResponse.getCharacterEncoding()));
-		return (writer);
+		this.stream = createOutputStream();
+		this.writer = new PrintWriter(new OutputStreamWriter(this.stream, this.origResponse.getCharacterEncoding()));
+		return (this.writer);
 	}
 
 	public void setContentLength(int length) {
