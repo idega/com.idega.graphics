@@ -28,6 +28,11 @@
       <name>1.0</name>
       <tag>GRAPHICS_1_0</tag>
     </version>
+    <version>
+      <id>3.1.0</id>
+      <name>3.1.0</name>
+      <tag>GRAPHICS_3_1_0</tag>
+    </version>
   </versions>
   <branches/>
   <developers>
@@ -60,6 +65,7 @@
         <idegaweb.bundle.include>true</idegaweb.bundle.include>
       </properties>
     </dependency-->
+
     <dependency>
       <groupId>batik</groupId>
       <artifactId>batik-rasterizer</artifactId>
