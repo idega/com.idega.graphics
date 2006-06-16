@@ -4,8 +4,7 @@
   <extend>${base.project.dir}/base-dependencies.xml</extend>
   <name>idegaWeb Graphics</name>
   <artifactId>com.idega.graphics</artifactId>
-  <!--currentVersion>1.0</currentVersion-->
-  <currentVersion>1.0.1-SNAPSHOT</currentVersion>
+  <currentVersion>3.1.0</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <shortDescription>idegaWeb Graphics is a Graphics toolkit</shortDescription>
   <versions>
