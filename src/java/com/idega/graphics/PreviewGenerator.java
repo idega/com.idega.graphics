@@ -30,4 +30,9 @@ public interface PreviewGenerator {
 	 * @see WebPagePreviewGenerator#generateImageURLWithExternalService(String, int, int)
 	 */
 	public URL generateImageURLWithExternalService(String urlToFile, int width, int height);
+	
+	/**
+	 * @see WebPagePreviewGenerator#getFileType()
+	 */
+	public String getFileType();
 }
