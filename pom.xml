@@ -113,13 +113,7 @@
 	<dependency>
       <groupId>flyingsaucer</groupId>
       <artifactId>core-renderer</artifactId>
-	  <version>R7pre1</version>
-      <type>jar</type>
-    </dependency>
-	<dependency>
-      <groupId>flyingsaucer</groupId>
-      <artifactId>cssparser</artifactId>
-      <version>R7pre1-0-9-4-fs</version>
+	  <version>R7pre1A</version>
       <type>jar</type>
     </dependency>
 	<dependency>
@@ -132,6 +126,12 @@
       <groupId>tagsoup</groupId>
       <artifactId>htmlparser</artifactId>
 	  <version>1.0.1</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jimi</groupId>
+      <artifactId>jimi</artifactId>
+      <version>1.0</version>
       <type>jar</type>
     </dependency>
   </dependencies>

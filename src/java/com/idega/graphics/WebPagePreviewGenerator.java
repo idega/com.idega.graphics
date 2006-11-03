@@ -1,12 +1,17 @@
 package com.idega.graphics;
 
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -21,6 +26,7 @@ import javax.imageio.stream.ImageInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.ccil.cowan.tagsoup.Parser;
+import org.xhtmlrenderer.resource.XMLResource;
 import org.xhtmlrenderer.simple.Graphics2DRenderer;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -41,8 +47,11 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 	private String fileType = null;
 	
 	private Parser parser = null;
+	private Graphics2DRenderer renderer = null;
+	private IWSlideService service = null;
 	
 	public WebPagePreviewGenerator() {
+		renderer = new Graphics2DRenderer();
 		fileType = "";
 	}
 	
@@ -67,13 +76,7 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 		if (!areValidParameters(urls, names, uploadDirectory, width, height)) {
 			return false;
 		}
-		IWSlideService service = null;
-		try {
-			service = (IWSlideService) IBOLookup.getServiceInstance(IWContext.getInstance(), IWSlideService.class);
-		} catch (IBOLookupException e) {
-			e.printStackTrace();
-			log.error(e);
-		}
+		
 		for (int i = 0; i < urls.size(); i++) {		
 			InputStream is = getImageInputStream(urls.get(i).toString(), width, height);
 			
@@ -83,7 +86,7 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 			}
 
 			try {
-				if (!service.uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, names.get(i).toString() + "." + getFileType(), is, "image/" + getFileType(), true)) {
+				if (!getSlideService(IWContext.getInstance()).uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, names.get(i).toString() + "." + getFileType(), is, "image/" + getFileType(), true)) {
 					log.error("Error uploading file: " + names.get(i).toString() + "." + getFileType());
 					return false;
 				}
@@ -229,10 +232,64 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 		}
 		return true;
 	}
+	
+	private InputStream getInputStream(String link) {
+		InputStream is = null;
+        try {
+        	URL url = new URL(link);
+        	if (url == null) {
+        		return null;
+        	}
+            is = url.openStream();
+        } catch (java.net.MalformedURLException e) {
+            log.error(e);
+        } catch (java.io.IOException e) {
+            log.error(e);
+        }
+        return is;
+	}
 		
 	public BufferedImage generateImage(String urlToFile, int width, int height) {
 		log.info("Trying with XHTMLRenderer: " + urlToFile);
-		BufferedImage bufImg = null;
+		
+		InputStream stream = getInputStream(urlToFile);
+		if(stream == null){
+			return null;
+		}
+
+		Reader r = null;
+		try {
+			r = new InputStreamReader(stream, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			log.error(e);
+			return null;
+		}
+		
+		BufferedImage buff = null;
+		try {
+			XMLResource resource = XMLResource.load(r);
+			renderer.setDocument(resource.getDocument(), urlToFile);
+			Dimension dim = new Dimension(width, height);
+	        buff = new BufferedImage((int) dim.getWidth(), (int) dim.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+	        Graphics2D g = (Graphics2D) buff.getGraphics();
+	        renderer.layout(g, dim);
+	        renderer.render(g);
+	        g.dispose();
+		} catch (Exception e) {
+			log.error("Unable to generate image with XHTMLRenderer: " + urlToFile);
+			log.trace(e);
+			return null;
+		}
+		try {
+			r.close();
+		} catch (IOException e) {
+			log.error(e);
+			return null;
+		}
+		closeInputStream(stream);
+        return buff;
+		
+		/*BufferedImage bufImg = null;
 		try {
 			bufImg = Graphics2DRenderer.renderToImage(urlToFile, width, height);
 		}
@@ -242,7 +299,7 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 			return null;
 		}
 		log.info("XHTMLRenderer: success: " + urlToFile);
-		return bufImg;
+		return bufImg;*/
 	}
 	
 	public boolean parseHTML(String urlToFile) {
@@ -346,6 +403,19 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 
 	private void setFileType(String fileType) {
 		this.fileType = fileType.toLowerCase();
+	}
+	
+	private IWSlideService getSlideService(IWContext iwc) {
+		if (service == null) {
+			synchronized (WebPagePreviewGenerator.class) {
+				try {
+					service = (IWSlideService) IBOLookup.getServiceInstance(iwc, IWSlideService.class);
+				} catch (IBOLookupException e) {
+					log.error(e);
+				}
+			}
+		}
+		return service;
 	}
 
 }
