@@ -36,6 +36,18 @@
       <artifactId>batik-rasterizer</artifactId>
       <version>1.6</version>
       <type>jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>xerces</groupId>
+          <artifactId>xercesImpl</artifactId>
+          <!-- too old version -->
+        </exclusion>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xmlParserAPIs</artifactId>
+          <!-- too old version -->
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>batik</groupId>
