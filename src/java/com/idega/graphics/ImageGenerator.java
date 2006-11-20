@@ -1,21 +1,15 @@
 package com.idega.graphics;
 
-import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,81 +19,108 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.ccil.cowan.tagsoup.Parser;
-import org.xhtmlrenderer.resource.XMLResource;
 import org.xhtmlrenderer.simple.Graphics2DRenderer;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.graphics.image.business.ImageEncoder;
+import com.idega.io.MemoryFileBuffer;
+import com.idega.io.MemoryInputStream;
+import com.idega.io.MemoryOutputStream;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
 
-public class WebPagePreviewGenerator implements PreviewGenerator {
+public class ImageGenerator implements Generator {
 	
-	private static final Log log = LogFactory.getLog(WebPagePreviewGenerator.class);
+	private static final Log log = LogFactory.getLog(ImageGenerator.class);
 	
 	private static final String EXTERNAL_SERVICE = "http://webdesignbook.net/snapper.php?url=";
 	private static final String IMAGE_WIDTH_PARAM = "&w=";
 	private static final String IMAGE_HEIGHT_PARAM = "&h=";
-	private String fileType = null;
-	
-	private Parser parser = null;
-	private Graphics2DRenderer renderer = null;
+	private static final String MIME_TYPE = "image/";
+	private String fileExtension = null;
+
 	private IWSlideService service = null;
+	private ImageEncoder encoder = null;
 	
-	public WebPagePreviewGenerator() {
-		renderer = new Graphics2DRenderer();
-		fileType = "";
+	public ImageGenerator() {
+		fileExtension = "";
+	}
+	
+	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width, int height) {
+		MemoryFileBuffer buff = new MemoryFileBuffer();
+		OutputStream output = new MemoryOutputStream(buff);
+		InputStream is = null;
+		try {
+			getImageEncoder().encode(mimeType, stream, output, width, height);
+			is = new MemoryInputStream(buff);
+			getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fileName, is, mimeType, true);
+		} catch (RemoteException e) {
+			log.error(e);
+			return false;
+		} catch (IOException e) {
+			log.error(e);
+			return false;
+		} finally {
+			closeInputStream(is);
+			closeOutputStream(output);
+		}
+		return true;
 	}
 	
 	/**
 	 * Generates preview of provided web page
 	 */
-	public boolean generatePreview(String urlToFile, String fileName, String uploadDirectory, int width, int height) {
-		if (!isValidString(urlToFile) || !isValidString(fileName)) {
+	public boolean generatePreview(String url, String fileName, String uploadDirectory, int width, int height, boolean encode) {
+		if (!isValidString(url) || !isValidString(fileName) || !isValidString(uploadDirectory) || !isValidInt(width) ||
+				!isValidInt(height)) {
 			return false;
 		}
-		List <String> url = new ArrayList <String> ();
-		url.add(urlToFile);
-		List <String> name = new ArrayList <String> ();
-		name.add(fileName);
-		return generatePreview(url, name, uploadDirectory, width, height);
+		
+		boolean result = true;
+		InputStream stream = getImageInputStream(url, width, height);
+		String fullName = fileName + "." + getFileExtension();
+		if (stream == null) {
+			log.error("Error getting InputStream");
+			return false;
+		}
+		if (encode) {
+			result = encodeAndUploadImage(uploadDirectory, fullName, MIME_TYPE + getFileExtension(), stream, width, height);
+			if (!closeInputStream(stream)) {
+				return false;
+			}
+		}
+		else {
+			try {
+				if (!getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream, MIME_TYPE + getFileExtension(), true)) {
+					log.error("Error uploading file: " + fullName);
+					result = false;
+				}
+			} catch(RemoteException e) {
+				log.error(e);
+				return false;
+			} finally {
+				closeInputStream(stream);
+			}
+		}
+
+		return result;
 	}
 
 	/**
 	 * Generates preview of provided web pages
 	 */
-	public boolean generatePreview(List <String> urls, List <String> names, String uploadDirectory, int width, int height) {
+	public boolean generatePreview(List <String> urls, List <String> names, String uploadDirectory, int width, int height, boolean encode) {
 		if (!areValidParameters(urls, names, uploadDirectory, width, height)) {
 			return false;
 		}
 		
-		for (int i = 0; i < urls.size(); i++) {		
-			InputStream is = getImageInputStream(urls.get(i).toString(), width, height);
-			
-			if (is == null) {
-				log.error("Error getting InputStream");
-				return false;
-			}
-
-			try {
-				if (!getSlideService(IWContext.getInstance()).uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, names.get(i).toString() + "." + getFileType(), is, "image/" + getFileType(), true)) {
-					log.error("Error uploading file: " + names.get(i).toString() + "." + getFileType());
-					return false;
-				}
-			} catch(RemoteException e) {
-				log.error(e);
-				return false;
-			}
-
-			if (!closeInputStream(is)) {
-				return false;
-			}
+		boolean result = true;
+		
+		for (int i = 0; i < urls.size(); i++) {
+			result = generatePreview(urls.get(i), names.get(i), uploadDirectory, width, height, encode);
 		}
-		return true;
+		return result;
 	}
 	
 	private boolean areValidParameters(List urls, List names, String directory, int width, int height) {
@@ -176,7 +197,7 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 			}
 			is = new ByteArrayInputStream(baos.toByteArray());
 			closeOutputStream(baos);
-			setFileType("png"); // FlyingSaucer returns image with type "png"
+			setFileExtension("png"); // FlyingSaucer returns image with type "png"
 			return is;
 		}
 		return null;
@@ -222,7 +243,7 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 			log.error("Unable to get ImageInputStream");
 			return false;
 		}
-		setFileType(getFormatType(iis));
+		setFileExtension(getFormatType(iis));
 		try {
 			iis.close();
 		}
@@ -232,64 +253,11 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 		}
 		return true;
 	}
-	
-	private InputStream getInputStream(String link) {
-		InputStream is = null;
-        try {
-        	URL url = new URL(link);
-        	if (url == null) {
-        		return null;
-        	}
-            is = url.openStream();
-        } catch (java.net.MalformedURLException e) {
-            log.error(e);
-        } catch (java.io.IOException e) {
-            log.error(e);
-        }
-        return is;
-	}
 		
 	public BufferedImage generateImage(String urlToFile, int width, int height) {
 		log.info("Trying with XHTMLRenderer: " + urlToFile);
-		
-		InputStream stream = getInputStream(urlToFile);
-		if(stream == null){
-			return null;
-		}
 
-		Reader r = null;
-		try {
-			r = new InputStreamReader(stream, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			log.error(e);
-			return null;
-		}
-		
-		BufferedImage buff = null;
-		try {
-			XMLResource resource = XMLResource.load(r);
-			renderer.setDocument(resource.getDocument(), urlToFile);
-			Dimension dim = new Dimension(width, height);
-	        buff = new BufferedImage((int) dim.getWidth(), (int) dim.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-	        Graphics2D g = (Graphics2D) buff.getGraphics();
-	        renderer.layout(g, dim);
-	        renderer.render(g);
-	        g.dispose();
-		} catch (Exception e) {
-			log.error("Unable to generate image with XHTMLRenderer: " + urlToFile);
-			log.trace(e);
-			return null;
-		}
-		try {
-			r.close();
-		} catch (IOException e) {
-			log.error(e);
-			return null;
-		}
-		closeInputStream(stream);
-        return buff;
-		
-		/*BufferedImage bufImg = null;
+		BufferedImage bufImg = null;
 		try {
 			bufImg = Graphics2DRenderer.renderToImage(urlToFile, width, height);
 		}
@@ -298,33 +266,9 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 			log.trace(e);
 			return null;
 		}
+		
 		log.info("XHTMLRenderer: success: " + urlToFile);
-		return bufImg;*/
-	}
-	
-	public boolean parseHTML(String urlToFile) {
-		if (parser == null) {
-			parser = new Parser();
-			parser.setContentHandler(new DefaultHandler());
-		}
-		URL url = generateURL(urlToFile);
-		if (url == null) {
-			return false;
-		}
-		InputSource input = null;
-		try {
-			input = new InputSource(new BufferedInputStream(url.openStream()));
-			parser.parse(input);
-		}
-		catch(IOException e) {
-			log.trace(e);
-			log.error("Error getting InputStream from URL: " + urlToFile);
-		}
-		catch (SAXException e) {
-			log.trace(e);
-			log.error("Error parsing with TagSoup");
-		}
-		return true;
+		return bufImg;
 	}
 	
 	/**
@@ -342,19 +286,6 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
 			return null;
 		}
 		log.info("External service: success: " + urlToFile);
-		return url;
-	}
-	
-	private URL generateURL(String urlToFile) {
-		URL url = null;
-		try {
-			url = new URL(urlToFile);
-		}
-		catch (MalformedURLException e) {
-			log.error("Unable to get URL to file: " + urlToFile);
-			log.trace(e);
-			return null;
-		}
 		return url;
 	}
 	
@@ -397,25 +328,38 @@ public class WebPagePreviewGenerator implements PreviewGenerator {
         return null;
     }
 
-	public String getFileType() {
-		return fileType;
+	public String getFileExtension() {
+		return fileExtension;
 	}
 
-	private void setFileType(String fileType) {
-		this.fileType = fileType.toLowerCase();
+	private void setFileExtension(String fileExtension) {
+		this.fileExtension = fileExtension.toLowerCase();
 	}
 	
-	private IWSlideService getSlideService(IWContext iwc) {
+	private IWSlideService getSlideService() {
 		if (service == null) {
-			synchronized (WebPagePreviewGenerator.class) {
+			synchronized (ImageGenerator.class) {
 				try {
-					service = (IWSlideService) IBOLookup.getServiceInstance(iwc, IWSlideService.class);
+					service = (IWSlideService) IBOLookup.getServiceInstance(IWContext.getInstance(), IWSlideService.class);
 				} catch (IBOLookupException e) {
 					log.error(e);
 				}
 			}
 		}
 		return service;
+	}
+	
+	public ImageEncoder getImageEncoder() {
+		if (encoder == null) {
+			synchronized (ImageGenerator.class) {
+				try {
+					encoder = (ImageEncoder) IBOLookup.getServiceInstance(IWContext.getInstance(), ImageEncoder.class);
+				} catch (IBOLookupException e) {
+					log.error(e);
+				}
+			}
+		}
+		return encoder;
 	}
 
 }

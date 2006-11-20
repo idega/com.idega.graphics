@@ -125,25 +125,19 @@
 	<dependency>
       <groupId>flyingsaucer</groupId>
       <artifactId>core-renderer</artifactId>
-	  <version>R7pre1A</version>
+	  <version>R7pre1</version>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>flyingsaucer</groupId>
       <artifactId>cssparser</artifactId>
-	  <version>R7pre1A-0-9-4-fs-m1.0</version>
+	  <version>0-9-4-fs</version>
       <type>jar</type>
     </dependency>
 	<dependency>
       <groupId>com.idega.block.platform</groupId>
       <artifactId>com.idega.slide</artifactId>
 	  <version>3.5.0</version>
-      <type>jar</type>
-    </dependency>
-	<dependency>
-      <groupId>tagsoup</groupId>
-      <artifactId>htmlparser</artifactId>
-	  <version>1.0.1</version>
       <type>jar</type>
     </dependency>
     <dependency>

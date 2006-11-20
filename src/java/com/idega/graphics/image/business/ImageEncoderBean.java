@@ -410,6 +410,8 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
     
     else if (PNG.equals(outputMimeType)) {
 			para = PNGEncodeParam.getDefaultEncodeParam(image);
+			((PNGEncodeParam)para).setBitDepth(16);
+			//((PNGEncodeParam)para).setBitDepth(24);
 		}
 		else if (PNM.equals(outputMimeType)) {
 			para = new PNMEncodeParam();
@@ -423,10 +425,5 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
   
     return para;
   }
-      
-      
-      
-
-
-
+  
 }
