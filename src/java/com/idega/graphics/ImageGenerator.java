@@ -10,12 +10,12 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.Iterator;
+//import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
+//import javax.imageio.ImageReader;
+//import javax.imageio.stream.ImageInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,8 +37,12 @@ public class ImageGenerator implements Generator {
 	private static final String EXTERNAL_SERVICE = "http://webdesignbook.net/snapper.php?url=";
 	private static final String IMAGE_WIDTH_PARAM = "&w=";
 	private static final String IMAGE_HEIGHT_PARAM = "&h=";
+	private static final String EXTERNAL_SERVICE_IMAGE_EXTENSION = "jpg";
 	private static final String MIME_TYPE = "image/";
+	
 	private String fileExtension = null;
+	
+	private boolean isExternalService = false;
 
 	private IWSlideService service = null;
 	private ImageEncoder encoder = null;
@@ -51,10 +55,11 @@ public class ImageGenerator implements Generator {
 		MemoryFileBuffer buff = new MemoryFileBuffer();
 		OutputStream output = new MemoryOutputStream(buff);
 		InputStream is = null;
+		boolean result = true;
 		try {
 			getImageEncoder().encode(mimeType, stream, output, width, height);
 			is = new MemoryInputStream(buff);
-			getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fileName, is, mimeType, true);
+			result = uploadImage(uploadDirectory, fileName, is);
 		} catch (RemoteException e) {
 			log.error(e);
 			return false;
@@ -62,10 +67,10 @@ public class ImageGenerator implements Generator {
 			log.error(e);
 			return false;
 		} finally {
-			closeInputStream(is);
+			closeInputStream(stream);
 			closeOutputStream(output);
 		}
-		return true;
+		return result;
 	}
 	
 	/**
@@ -84,26 +89,34 @@ public class ImageGenerator implements Generator {
 			log.error("Error getting InputStream");
 			return false;
 		}
+		
+		if (isExternalService) {
+			return uploadImage(uploadDirectory, fullName, stream);
+		}
+		
 		if (encode) {
 			result = encodeAndUploadImage(uploadDirectory, fullName, MIME_TYPE + getFileExtension(), stream, width, height);
-			if (!closeInputStream(stream)) {
-				return false;
-			}
 		}
 		else {
-			try {
-				if (!getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream, MIME_TYPE + getFileExtension(), true)) {
-					log.error("Error uploading file: " + fullName);
-					result = false;
-				}
-			} catch(RemoteException e) {
-				log.error(e);
-				return false;
-			} finally {
-				closeInputStream(stream);
-			}
+			return uploadImage(uploadDirectory, fullName, stream);
 		}
 
+		return result;
+	}
+	
+	private boolean uploadImage(String uploadDirectory, String fullName, InputStream stream) {
+		boolean result = true;
+		try {
+			if (!getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream, MIME_TYPE + getFileExtension(), true)) {
+				log.error("Error uploading file: " + fullName);
+				result = false;
+			}
+		} catch(RemoteException e) {
+			log.error(e);
+			return false;
+		} finally {
+			closeInputStream(stream);
+		}
 		return result;
 	}
 
@@ -164,29 +177,26 @@ public class ImageGenerator implements Generator {
 	 * @return InputStream
 	 */
 	private InputStream getImageInputStream(String urlToFile, int width, int height) {
-		InputStream is = null;
-		InputStream temp = null; // This stream will be used to set a file type (in case image is generetad with external service)
+		InputStream stream = null;
 		BufferedImage bi = generateImage(urlToFile, width, height);
 		if (bi == null) { // Failed to generate image, trying with external service
 			URL url = generateImageURLWithExternalService(urlToFile, width, height);
-			temp = null;
 			try {
-				is = new BufferedInputStream(url.openStream());
-				temp = new BufferedInputStream(url.openStream());
+				stream = new BufferedInputStream(url.openStream());
 			} catch (IOException e) {
 				log.trace(e);
 				log.error("Unable to get InputStream from URL: " + urlToFile);
 				return null;
 			}
-			if (is == null || temp == null) {
+			if (stream == null) {
 				return null;
 			}
-			if (setFileType(temp)) {
-				closeInputStream(temp);
-				return is;
-			}
+			setFileExtension(EXTERNAL_SERVICE_IMAGE_EXTENSION);
+			isExternalService = true;
+			return stream;
 		}
 		else {
+			isExternalService = false;
 			ByteArrayOutputStream baos = new  ByteArrayOutputStream();
 			try {
 				ImageIO.write(bi, "png", baos); // FlyingSaucer returns image with type "png"
@@ -195,12 +205,11 @@ public class ImageGenerator implements Generator {
 				log.error("Unable to create InputStream from BufferedImage: " + urlToFile);
 				return null;
 			}
-			is = new ByteArrayInputStream(baos.toByteArray());
+			stream = new ByteArrayInputStream(baos.toByteArray());
 			closeOutputStream(baos);
 			setFileExtension("png"); // FlyingSaucer returns image with type "png"
-			return is;
+			return stream;
 		}
-		return null;
 	}
 	
 	private boolean closeInputStream(InputStream is) {
@@ -229,27 +238,6 @@ public class ImageGenerator implements Generator {
 			log.trace(e);
 			log.error("Unable to close OutputStream");
 			return false;
-		}
-		return true;
-	}
-	
-	private boolean setFileType(InputStream is) {
-		if (is == null) {
-			log.error("InputStream is not readable");
-			return false;
-		}
-		ImageInputStream iis = getImageInputStream(is);
-		if (iis == null) {
-			log.error("Unable to get ImageInputStream");
-			return false;
-		}
-		setFileExtension(getFormatType(iis));
-		try {
-			iis.close();
-		}
-		catch (IOException e) {
-			log.trace(e);
-			log.error("Unable to close ImageInputStream");
 		}
 		return true;
 	}
@@ -288,45 +276,6 @@ public class ImageGenerator implements Generator {
 		log.info("External service: success: " + urlToFile);
 		return url;
 	}
-	
-	private ImageInputStream getImageInputStream(InputStream is) {
-       	ImageInputStream iis = null;
-       	try {
-       		iis = ImageIO.createImageInputStream(is);
-       		return iis;
-        } catch (IOException e) {
-       		log.trace(e);
-       		log.error("Unable to create ImageInputStream");
-       		return null;
-       	}
-	}
-	
-	private String getFormatType(ImageInputStream iis) {
-        // Find all image readers that recognize the image format
-        Iterator iter = ImageIO.getImageReaders(iis);
-        if (!iter.hasNext()) {
-        	// No readers found
-           	log.error("No readers found");
-           	return null;
-        }
-    
-        if (iter.hasNext()) {
-        	// Use the first reader
-        	ImageReader reader = (ImageReader)iter.next();
-        	if (reader == null) {
-        		return null;
-        	}
-            try {
-            	return reader.getFormatName();
-        	} catch (IOException e) {
-        		log.trace(e);
-           		log.error("Unable to get file type");
-           		return null;
-        	}
-        }
-        // The image could not be read
-        return null;
-    }
 
 	public String getFileExtension() {
 		return fileExtension;
