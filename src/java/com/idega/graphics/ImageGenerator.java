@@ -10,12 +10,9 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
-//import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-//import javax.imageio.ImageReader;
-//import javax.imageio.stream.ImageInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +48,8 @@ public class ImageGenerator implements Generator {
 		fileExtension = "";
 	}
 	
-	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width, int height) {
+	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width,
+			int height) {
 		MemoryFileBuffer buff = new MemoryFileBuffer();
 		OutputStream output = new MemoryOutputStream(buff);
 		InputStream is = null;
@@ -123,7 +121,8 @@ public class ImageGenerator implements Generator {
 	/**
 	 * Generates preview of provided web pages
 	 */
-	public boolean generatePreview(List <String> urls, List <String> names, String uploadDirectory, int width, int height, boolean encode) {
+	public boolean generatePreview(List <String> urls, List <String> names, String uploadDirectory, int width, int height,
+			boolean encode) {
 		if (!areValidParameters(urls, names, uploadDirectory, width, height)) {
 			return false;
 		}
@@ -244,7 +243,6 @@ public class ImageGenerator implements Generator {
 		
 	public BufferedImage generateImage(String urlToFile, int width, int height) {
 		log.info("Trying with XHTMLRenderer: " + urlToFile);
-
 		BufferedImage bufImg = null;
 		try {
 			bufImg = Graphics2DRenderer.renderToImage(urlToFile, width, height);
@@ -254,7 +252,6 @@ public class ImageGenerator implements Generator {
 			log.trace(e);
 			return null;
 		}
-		
 		log.info("XHTMLRenderer: success: " + urlToFile);
 		return bufImg;
 	}
