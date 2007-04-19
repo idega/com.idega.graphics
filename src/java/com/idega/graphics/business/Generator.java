@@ -1,4 +1,4 @@
-package com.idega.graphics;
+package com.idega.graphics.business;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
