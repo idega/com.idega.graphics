@@ -44,7 +44,9 @@ public class ImageGenerator implements Generator {
 	private IWSlideService service = null;
 	private ImageEncoder encoder = null;
 	
-	public ImageGenerator() {
+	public ImageGenerator(IWContext iwc) {
+		initializeSlideService(iwc);
+		initializeImageEncoder(iwc);
 		fileExtension = "";
 	}
 	
@@ -82,7 +84,7 @@ public class ImageGenerator implements Generator {
 		
 		boolean result = true;
 		InputStream stream = getImageInputStream(url, width, height);
-		String fullName = fileName + "." + getFileExtension();
+		String fullName = new StringBuffer(fileName).append(".").append(getFileExtension()).toString();
 		if (stream == null) {
 			log.error("Error getting InputStream");
 			return false;
@@ -93,7 +95,8 @@ public class ImageGenerator implements Generator {
 		}
 		
 		if (encode) {
-			result = encodeAndUploadImage(uploadDirectory, fullName, MIME_TYPE + getFileExtension(), stream, width, height);
+			result = encodeAndUploadImage(uploadDirectory, fullName, new StringBuffer(MIME_TYPE).append(getFileExtension()).toString(),
+					stream, width, height);
 		}
 		else {
 			return uploadImage(uploadDirectory, fullName, stream);
@@ -105,7 +108,8 @@ public class ImageGenerator implements Generator {
 	private boolean uploadImage(String uploadDirectory, String fullName, InputStream stream) {
 		boolean result = true;
 		try {
-			if (!getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream, MIME_TYPE + getFileExtension(), true)) {
+			if (!getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream,
+					new StringBuffer(MIME_TYPE).append(getFileExtension()).toString(), true)) {
 				log.error("Error uploading file: " + fullName);
 				result = false;
 			}
@@ -263,7 +267,8 @@ public class ImageGenerator implements Generator {
 		log.info("Trying with external service: " + urlToFile);
 		URL url = null;
 		try {
-			url = new URL(EXTERNAL_SERVICE + urlToFile + IMAGE_WIDTH_PARAM + width + IMAGE_HEIGHT_PARAM + height);
+			url = new URL(new StringBuffer(EXTERNAL_SERVICE).append(urlToFile).append(IMAGE_WIDTH_PARAM).append(width)
+					.append(IMAGE_HEIGHT_PARAM).append(height).toString());
 		}
 		catch (MalformedURLException e) {
 			log.error("Unable to generate image with external service: " + urlToFile);
@@ -295,7 +300,27 @@ public class ImageGenerator implements Generator {
 		return service;
 	}
 	
-	public ImageEncoder getImageEncoder() {
+	private void initializeSlideService(IWContext iwc) {
+		synchronized (ImageEncoder.class) {
+			try {
+				service = (IWSlideService) IBOLookup.getServiceInstance(iwc, IWSlideService.class);
+			} catch (IBOLookupException e) {
+				log.error(e);
+			}
+		}
+	}
+	
+	private void initializeImageEncoder(IWContext iwc) {
+		synchronized (ImageEncoder.class) {
+			try {
+				encoder = (ImageEncoder) IBOLookup.getServiceInstance(iwc, ImageEncoder.class);
+			} catch (IBOLookupException e) {
+				log.error(e);
+			}
+		}
+	}
+	
+	private ImageEncoder getImageEncoder() {
 		if (encoder == null) {
 			synchronized (ImageGenerator.class) {
 				try {
