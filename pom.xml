@@ -137,7 +137,7 @@
 	<dependency>
       <groupId>flyingsaucer</groupId>
       <artifactId>core-renderer</artifactId>
-	  <version>R7pre1_ib1</version>
+	  <version>R7pre1_ib2</version>
       <type>jar</type>
     </dependency>
     <dependency>
