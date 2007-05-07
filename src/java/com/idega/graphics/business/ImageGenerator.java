@@ -56,10 +56,14 @@ public class ImageGenerator implements Generator {
 	private IWSlideService service = null;
 	private ImageEncoder encoder = null;
 	
+	public ImageGenerator() {
+		fileExtension = GraphicsConstants.JPG_FILE_NAME_EXTENSION;
+	}
+	
 	public ImageGenerator(IWContext iwc) {
+		this();
 		initializeSlideService(iwc);
 		initializeImageEncoder(iwc);
-		fileExtension = GraphicsConstants.JPG_FILE_NAME_EXTENSION;
 	}
 	
 	/**
@@ -168,23 +172,17 @@ public class ImageGenerator implements Generator {
 		if (!isValidString(url) || dimensions == null) {
 			return null;
 		}
-		BufferedImage image = getImage(url, 800, 600);
+		BufferedImage image = getImage(url, 800, 600, isJpg);
 		if (image == null) {
 			return null;
 		}
 		long start = System.currentTimeMillis();
-		
+
 		String extension = GraphicsConstants.PNG_FILE_NAME_EXTENSION;
-		
 		if (isJpg) {
 			extension = GraphicsConstants.JPG_FILE_NAME_EXTENSION;
-			//	Converting PNG to JPG
-			image = getConvertedImageFromPNGToJPG(image);
-	        if (image == null) {
-	        	return null;
-	        }
 		}
-        
+
         //	Setting new quality
 		if (quality < 1) {
 			image = getImageWithNewQuality(image, quality, isJpg);
@@ -192,7 +190,7 @@ public class ImageGenerator implements Generator {
 	        	return null;
 	        }
 		}
-        
+
         //	Scaling image, creating multiple images
         ScalingOptions options = getScalingOptions(isJpg);
         List images = ImageUtil.scaleMultiple(options, image, dimensions);
@@ -207,13 +205,13 @@ public class ImageGenerator implements Generator {
         		allImages.add((BufferedImage) o);
         	}
         }
-        
+
 		setFileExtension(extension);
 		isExternalService = false;
-		
+
 		long end = System.currentTimeMillis();
 		log.info(new StringBuffer("Got images in ").append((end - start)).append(" ms: ").append(url));
-		
+
 		return allImages;
 	}
 	
@@ -338,24 +336,39 @@ public class ImageGenerator implements Generator {
 	/**
 	 * Creates InputStream from BufferedImage
 	 */
-	public InputStream getImageInputStream(Image image, String extension) {
+	public InputStream getImageInputStream(Image image, String extension, boolean isJpg) {
 		if (image == null || extension == null) {
 			return null;
 		}
-		return getImageInputStream(ImageUtil.convertToBufferedImage(image), extension);    
+		int type = BufferedImage.TYPE_INT_ARGB;
+		if (isJpg) {
+			type = BufferedImage.TYPE_INT_RGB;
+		}
+		return getImageInputStream(ImageUtil.convertToBufferedImage(image, type), extension);
 	}
 
 	/**
 	 * Generates image with Flying Saucer XHTMLRenderer
 	 */
 	public BufferedImage generateImage(String urlToFile, int width, int height) {
+		return generateImage(urlToFile, width, height, false);
+	}
+	
+	/**
+	 * Generates image with Flying Saucer XHTMLRenderer
+	 */
+	public BufferedImage generateImage(String urlToFile, int width, int height, boolean isJpg) {
+		if (urlToFile == null) {
+			return null;
+		}
+		
 		long start = System.currentTimeMillis();
 		log.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile));
-		
-//		width = 800;
-//		height = 1024;
-		
+
 		Java2DRenderer renderer = new Java2DRenderer(urlToFile, width, height);
+		if (isJpg) {
+			renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
+		}
 		BufferedImage image = null;
 		try {
 			image = renderer.getImage();
@@ -363,6 +376,13 @@ public class ImageGenerator implements Generator {
 			log.error(new StringBuffer("Unable to generate image with XHTMLRenderer: ").append(urlToFile));
 			log.trace(e);
 			return null;
+		}
+		
+		if (isJpg) {
+			setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
+		}
+		else {
+			setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
 		}
 		
 		long end = System.currentTimeMillis();
@@ -482,17 +502,15 @@ public class ImageGenerator implements Generator {
 	}
 	
 	private ScalingOptions getScalingOptions(boolean isJpg) {
-		int colorType = BufferedImage.TYPE_INT_ARGB;
 		DownscaleQuality quality = DownscaleQuality.LOW_QUALITY;
 		if (isJpg) {
-			colorType = BufferedImage.TYPE_INT_RGB;
 			quality = DownscaleQuality.HIGH_QUALITY;
 		}
-		return new ScalingOptions(colorType, quality, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		return new ScalingOptions(quality, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 	}
 
-	private BufferedImage getImage(String urlToFile, int width, int height) {
-		BufferedImage generatedImage = generateImage(urlToFile, width, height);
+	private BufferedImage getImage(String urlToFile, int width, int height, boolean isJpg) {
+		BufferedImage generatedImage = generateImage(urlToFile, width, height, isJpg);
 		if (generatedImage == null) {
 			//	Failed to generate image, trying with external service
 			URL url = generateImageURLWithExternalService(urlToFile, width, height);

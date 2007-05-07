@@ -25,6 +25,11 @@ public interface Generator {
 	public BufferedImage generateImage(String urlToFile, int width, int height);
 	
 	/**
+	 * @see ImageGenerator#generateImage(String, int, int, boolean)
+	 */
+	public BufferedImage generateImage(String urlToFile, int width, int height, boolean isJpg);
+	
+	/**
 	 * @see ImageGenerator#generateImageURLWithExternalService(String, int, int)
 	 */
 	public URL generateImageURLWithExternalService(String urlToFile, int width, int height);
@@ -67,7 +72,7 @@ public interface Generator {
 	/**
 	 * @see ImageGenerator#getImageInputStream(Image, String)
 	 */
-	public InputStream getImageInputStream(Image image, String extension);
+	public InputStream getImageInputStream(Image image, String extension, boolean isJpg);
 	
 	/**
 	 * @see ImageGenerator#generatePreviews(String, List, boolean, float)
