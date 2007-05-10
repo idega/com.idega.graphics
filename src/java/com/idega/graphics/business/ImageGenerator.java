@@ -502,10 +502,12 @@ public class ImageGenerator implements Generator {
 	}
 	
 	private ScalingOptions getScalingOptions(boolean isJpg) {
-		DownscaleQuality quality = DownscaleQuality.LOW_QUALITY;
+		//	TODO: remove it
+		/*DownscaleQuality quality = DownscaleQuality.LOW_QUALITY;
 		if (isJpg) {
 			quality = DownscaleQuality.HIGH_QUALITY;
-		}
+		}*/
+		DownscaleQuality quality = DownscaleQuality.HIGH_QUALITY;
 		return new ScalingOptions(quality, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 	}
 
