@@ -173,6 +173,10 @@ public class ImageGenerator implements Generator {
 			return null;
 		}
 		BufferedImage image = getImage(url, 800, 600, isJpg);
+		/*List<BufferedImage> temp = new ArrayList<BufferedImage>();
+		temp.add(image);
+		temp.add(image);
+		return temp;*/
 		if (image == null) {
 			return null;
 		}
@@ -364,10 +368,20 @@ public class ImageGenerator implements Generator {
 		
 		long start = System.currentTimeMillis();
 		log.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile));
-
+		
+		/*BufferedImage image = null;
+		try {
+			image = Graphics2DRenderer.renderToImage(urlToFile, width, height);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}*/
+		
 		Java2DRenderer renderer = new Java2DRenderer(urlToFile, width, height);
 		if (isJpg) {
 			renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
+		}
+		else {
+			renderer.setBufferedImageType(BufferedImage.TYPE_INT_ARGB);
 		}
 		BufferedImage image = null;
 		try {
@@ -502,12 +516,10 @@ public class ImageGenerator implements Generator {
 	}
 	
 	private ScalingOptions getScalingOptions(boolean isJpg) {
-		//	TODO: remove it
-		/*DownscaleQuality quality = DownscaleQuality.LOW_QUALITY;
+		DownscaleQuality quality = DownscaleQuality.LOW_QUALITY;
 		if (isJpg) {
 			quality = DownscaleQuality.HIGH_QUALITY;
-		}*/
-		DownscaleQuality quality = DownscaleQuality.HIGH_QUALITY;
+		}
 		return new ScalingOptions(quality, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 	}
 
