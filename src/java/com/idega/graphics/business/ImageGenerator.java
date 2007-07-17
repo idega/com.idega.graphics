@@ -25,6 +25,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.xhtmlrenderer.simple.Graphics2DRenderer;
 import org.xhtmlrenderer.swing.Java2DRenderer;
 import org.xhtmlrenderer.util.DownscaleQuality;
 import org.xhtmlrenderer.util.FSImageWriter;
@@ -34,11 +35,14 @@ import org.xhtmlrenderer.util.ScalingOptions;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.graphics.image.business.ImageEncoder;
+import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.io.MemoryFileBuffer;
 import com.idega.io.MemoryInputStream;
 import com.idega.io.MemoryOutputStream;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
+import com.idega.util.CoreConstants;
 
 public class ImageGenerator implements Generator {
 	
@@ -182,11 +186,6 @@ public class ImageGenerator implements Generator {
 		}
 		long start = System.currentTimeMillis();
 
-		String extension = GraphicsConstants.PNG_FILE_NAME_EXTENSION;
-		if (isJpg) {
-			extension = GraphicsConstants.JPG_FILE_NAME_EXTENSION;
-		}
-
         //	Setting new quality
 		if (quality < 1) {
 			image = getImageWithNewQuality(image, quality, isJpg);
@@ -210,7 +209,6 @@ public class ImageGenerator implements Generator {
         	}
         }
 
-		setFileExtension(extension);
 		isExternalService = false;
 
 		long end = System.currentTimeMillis();
@@ -368,35 +366,60 @@ public class ImageGenerator implements Generator {
 		
 		long start = System.currentTimeMillis();
 		log.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile));
+		String errorMessage = "Unable to generate image with XHTMLRenderer: ";
 		
-		/*BufferedImage image = null;
-		try {
-			image = Graphics2DRenderer.renderToImage(urlToFile, width, height);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}*/
+		boolean useOldGenerator = false;
+		IWMainApplication app = IWMainApplication.getDefaultIWMainApplication();
+		if (app != null) {
+			IWMainApplicationSettings settings = app.getSettings();
+			if (settings != null) {
+				String value = settings.getProperty(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR);
+				if (value == null) {
+					settings.setProperty(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR, "false");
+				}
+				else {
+					useOldGenerator = "true".equalsIgnoreCase(value);
+				}
+			}
+		}
 		
-		Java2DRenderer renderer = new Java2DRenderer(urlToFile, width, height);
-		if (isJpg) {
-			renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
-		}
-		else {
-			renderer.setBufferedImageType(BufferedImage.TYPE_INT_ARGB);
-		}
 		BufferedImage image = null;
-		try {
-			image = renderer.getImage();
-		} catch (Exception e) {
-			log.error(new StringBuffer("Unable to generate image with XHTMLRenderer: ").append(urlToFile));
-			log.trace(e);
-			return null;
-		}
-		
-		if (isJpg) {
-			setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
+		if (useOldGenerator) {
+			try {
+				image = Graphics2DRenderer.renderToImage(urlToFile, width, height);
+			} catch (Exception e) {
+				log.error(new StringBuffer(errorMessage).append(urlToFile));
+				log.trace(e);
+				return null;
+			}
 		}
 		else {
+			Java2DRenderer renderer = new Java2DRenderer(urlToFile, width, height);
+			if (isJpg) {
+				renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
+			}
+			else {
+				renderer.setBufferedImageType(BufferedImage.TYPE_INT_ARGB);
+			}
+			try {
+				image = renderer.getImage();
+			} catch (Exception e) {
+				log.error(new StringBuffer(errorMessage).append(urlToFile));
+				log.trace(e);
+				return null;
+			}
+		}
+		
+		if (useOldGenerator) {
 			setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
+		}
+		else {
+			if (isJpg) {
+				setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
+			}
+			else {
+				setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
+			}
 		}
 		
 		long end = System.currentTimeMillis();
