@@ -32,34 +32,10 @@
     <dependency>
       <groupId>com.idega.block.platform</groupId>
       <artifactId>com.idega.core</artifactId>
-      <version>4.0-SNAPSHOT</version>
-      <type>jar</type>
     </dependency>
-
     <dependency>
       <groupId>batik</groupId>
       <artifactId>batik-rasterizer</artifactId>
-      <version>1.6</version>
-      <type>jar</type>
-      <exclusions>
-        <exclusion>
-          <groupId>xerces</groupId>
-          <artifactId>xercesImpl</artifactId>
-          <!-- too old version -->
-        </exclusion>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xmlParserAPIs</artifactId>
-          <!-- too old version -->
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-    <!-- new version dependency instead of old one(s)  -->
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
-      <version>2.8.1</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>batik</groupId>
@@ -149,8 +125,6 @@
 	<dependency>
       <groupId>com.idega.block.platform</groupId>
       <artifactId>com.idega.slide</artifactId>
-	  <version>4.0-SNAPSHOT</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>jimi</groupId>
