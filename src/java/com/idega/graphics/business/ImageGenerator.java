@@ -368,17 +368,17 @@ public class ImageGenerator implements Generator {
 		log.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile));
 		String errorMessage = "Unable to generate image with XHTMLRenderer: ";
 		
-		boolean useOldGenerator = false;
+		boolean useOldGenerator = true;
 		IWMainApplication app = IWMainApplication.getDefaultIWMainApplication();
 		if (app != null) {
 			IWMainApplicationSettings settings = app.getSettings();
 			if (settings != null) {
 				String value = settings.getProperty(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR);
 				if (value == null) {
-					settings.setProperty(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR, "false");
+					settings.setProperty(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR, Boolean.TRUE.toString());
 				}
 				else {
-					useOldGenerator = "true".equalsIgnoreCase(value);
+					useOldGenerator = Boolean.TRUE.toString().equalsIgnoreCase(value);
 				}
 			}
 		}
