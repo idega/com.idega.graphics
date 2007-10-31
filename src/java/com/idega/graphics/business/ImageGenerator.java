@@ -109,7 +109,7 @@ public class ImageGenerator implements Generator {
 			try {
 				file.createNewFile();
 			} catch (IOException e) {
-				log.error(e);
+				e.printStackTrace();
 				return null;
 			}
 		}
@@ -118,7 +118,7 @@ public class ImageGenerator implements Generator {
 		try {
 			fos = new BufferedOutputStream(new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
-			log.error(e);
+			e.printStackTrace();
 			return null;
 		}
 		
@@ -135,7 +135,7 @@ public class ImageGenerator implements Generator {
 			imageWriter.write(originalImage, fos);
 			return ImageIO.read(file);
 		} catch (IOException e) {
-			log.error(e);
+			e.printStackTrace();
 			return null;
 		} finally {
 			file.delete();
@@ -157,10 +157,10 @@ public class ImageGenerator implements Generator {
 			is = new MemoryInputStream(buff);
 			result = uploadImage(uploadDirectory, fileName, is);
 		} catch (RemoteException e) {
-			log.error(e);
+			e.printStackTrace();
 			return false;
 		} catch (IOException e) {
-			log.error(e);
+			e.printStackTrace();
 			return false;
 		} finally {
 			closeInputStream(stream);
@@ -172,6 +172,7 @@ public class ImageGenerator implements Generator {
 	/**
 	 * Generates preview of provided image (url), sets new quality and scales it to multiple images
 	 */
+	@SuppressWarnings("unchecked")
 	public List<BufferedImage> generatePreviews(String url, List<Dimension> dimensions, boolean isJpg, float quality) {
 		if (!isValidString(url) || dimensions == null) {
 			return null;
@@ -277,7 +278,7 @@ public class ImageGenerator implements Generator {
 		try {
 			originalImage = ImageIO.read(imageStream);
 		} catch (IOException e) {
-			log.error(e);
+			e.printStackTrace();
 			return null;
 		}
 		closeInputStream(imageStream);
@@ -314,21 +315,21 @@ public class ImageGenerator implements Generator {
 			try {
 				imageFile.createNewFile();
 			} catch (IOException e) {
-				log.error(e);
+				e.printStackTrace();
 				return null;
 			}
 		}
 		try {
 			ImageIO.write(image, extension, imageFile);
 		} catch (IOException e) {
-			log.error(e);
+			e.printStackTrace();
 			return null;
 		}
 		InputStream stream = null;
 		try {
 			stream = new BufferedInputStream(new FileInputStream(imageFile));
 		} catch (FileNotFoundException e) {
-			log.error(e);
+			e.printStackTrace();
 			return null;
 		}
 		imageFile.delete();
@@ -389,7 +390,7 @@ public class ImageGenerator implements Generator {
 				image = Graphics2DRenderer.renderToImage(urlToFile, width, height);
 			} catch (Exception e) {
 				log.error(new StringBuffer(errorMessage).append(urlToFile));
-				log.trace(e);
+				e.printStackTrace();
 				return null;
 			}
 		}
@@ -405,7 +406,7 @@ public class ImageGenerator implements Generator {
 				image = renderer.getImage();
 			} catch (Exception e) {
 				log.error(new StringBuffer(errorMessage).append(urlToFile));
-				log.trace(e);
+				e.printStackTrace();
 				return null;
 			}
 		}
@@ -440,7 +441,7 @@ public class ImageGenerator implements Generator {
 		}
 		catch (MalformedURLException e) {
 			log.error("Unable to generate image with external service: " + urlToFile);
-			log.trace(e);
+			e.printStackTrace();
 			return null;
 		}
 		log.info("External service: success: " + urlToFile);
@@ -498,7 +499,7 @@ public class ImageGenerator implements Generator {
 				try {
 					service = (IWSlideService) IBOLookup.getServiceInstance(IWContext.getInstance(), IWSlideService.class);
 				} catch (IBOLookupException e) {
-					log.error(e);
+					e.printStackTrace();
 				}
 			}
 		}
@@ -510,7 +511,7 @@ public class ImageGenerator implements Generator {
 			try {
 				service = (IWSlideService) IBOLookup.getServiceInstance(iwc, IWSlideService.class);
 			} catch (IBOLookupException e) {
-				log.error(e);
+				e.printStackTrace();
 			}
 		}
 	}
@@ -520,7 +521,7 @@ public class ImageGenerator implements Generator {
 			try {
 				encoder = (ImageEncoder) IBOLookup.getServiceInstance(iwc, ImageEncoder.class);
 			} catch (IBOLookupException e) {
-				log.error(e);
+				e.printStackTrace();
 			}
 		}
 	}
@@ -531,7 +532,7 @@ public class ImageGenerator implements Generator {
 				try {
 					encoder = (ImageEncoder) IBOLookup.getServiceInstance(IWContext.getInstance(), ImageEncoder.class);
 				} catch (IBOLookupException e) {
-					log.error(e);
+					e.printStackTrace();
 				}
 			}
 		}
@@ -554,7 +555,7 @@ public class ImageGenerator implements Generator {
 			try {
 				generatedImage = ImageIO.read(url);
 			} catch (IOException e) {
-				log.error(e);
+				e.printStackTrace();
 				return null;
 			}
 			setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
@@ -573,7 +574,7 @@ public class ImageGenerator implements Generator {
 				result = false;
 			}
 		} catch(RemoteException e) {
-			log.error(e);
+			e.printStackTrace();
 			return false;
 		} finally {
 			closeInputStream(stream);
@@ -581,6 +582,7 @@ public class ImageGenerator implements Generator {
 		return result;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private boolean areValidParameters(List urls, List names, String directory, int width, int height) {
 		if (urls == null || names == null) {
 			return false;
@@ -622,7 +624,7 @@ public class ImageGenerator implements Generator {
 		try {
 			is.close();
 		} catch (IOException e) {
-			log.trace(e);
+			e.printStackTrace();
 			log.error("Unable to close InputStream");
 			return false;
 		}
@@ -637,7 +639,7 @@ public class ImageGenerator implements Generator {
 		try {
 			os.close();
 		} catch (IOException e) {
-			log.trace(e);
+			e.printStackTrace();
 			log.error("Unable to close OutputStream");
 			return false;
 		}
