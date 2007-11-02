@@ -177,14 +177,12 @@ public class ImageGenerator implements Generator {
 		if (!isValidString(url) || dimensions == null) {
 			return null;
 		}
+		
 		BufferedImage image = getImage(url, 800, 600, isJpg);
-		/*List<BufferedImage> temp = new ArrayList<BufferedImage>();
-		temp.add(image);
-		temp.add(image);
-		return temp;*/
 		if (image == null) {
 			return null;
 		}
+		
 		long start = System.currentTimeMillis();
 
         //	Setting new quality
@@ -201,6 +199,7 @@ public class ImageGenerator implements Generator {
         if (images == null) {
         	return null;
         }
+        
         List<BufferedImage> allImages = new ArrayList<BufferedImage>(images.size());
         Object o = null;
         for (int i = 0; i < images.size(); i++) {
