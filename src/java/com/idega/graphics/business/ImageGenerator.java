@@ -20,6 +20,7 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
@@ -59,8 +60,11 @@ public class ImageGenerator implements Generator {
 
 	private IWSlideService service = null;
 	private ImageEncoder encoder = null;
+	private Random generator = null;
 	
 	public ImageGenerator() {
+		generator = new Random();
+		
 		fileExtension = GraphicsConstants.JPG_FILE_NAME_EXTENSION;
 	}
 	
@@ -306,7 +310,7 @@ public class ImageGenerator implements Generator {
 		}
 		
 		//	Building InputStream
-		String fileName = new StringBuffer("temp.").append(extension).toString();
+		String fileName = new StringBuffer("temp_").append(generator.nextInt(Integer.MAX_VALUE)).append(CoreConstants.DOT).append(extension).toString();
 		File imageFile = new File(fileName);
 		if (imageFile.exists()) {
 			imageFile.delete();
