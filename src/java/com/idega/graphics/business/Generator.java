@@ -12,7 +12,7 @@ public interface Generator {
 	/**
 	 * @see ImageGenerator#generatePreview(String, String, String, int, int)
 	 */
-	public boolean generatePreview(String urlToFile, String fileName, String uploadDirectory, int width, int height, boolean encode, boolean makeJpg, float quality);
+	public boolean generatePreview(String urlToFile, String fileName, String uploadDirectory, int width, int height, boolean encode, boolean makeJpg, float quality) throws Exception;
 	
 	/**
 	 * @see ImageGenerator#generatePreview(List, List, String, int, int)
@@ -57,7 +57,7 @@ public interface Generator {
 	/**
 	 * @see ImageGenerator#getScaledImage(InputStream, int, int)
 	 */
-	public Image getScaledImage(InputStream imageStream, int width, int height, boolean isJpg);
+	public Image getScaledImage(InputStream imageStream, int width, int height, boolean isJpg) throws Exception;
 	
 	/**
 	 * @see ImageGenerator#getScaledImage(BufferedImage, int, int)
