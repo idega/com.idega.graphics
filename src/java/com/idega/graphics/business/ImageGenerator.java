@@ -182,7 +182,7 @@ public class ImageGenerator implements Generator {
 			return null;
 		}
 		
-		BufferedImage image = getImage(url, 800, 600, isJpg);
+		BufferedImage image = getImage(url, GraphicsConstants.GENERATED_IMAGE_HEIGHT, GraphicsConstants.GENERATED_IMAGE_WIDTH, isJpg);	//	"View" to image
 		if (image == null) {
 			return null;
 		}
@@ -199,7 +199,7 @@ public class ImageGenerator implements Generator {
 
         //	Scaling image, creating multiple images
         ScalingOptions options = getScalingOptions(isJpg);
-        List images = ImageUtil.scaleMultiple(options, image, dimensions);
+        List images = ImageUtil.scaleMultiple(options, image, dimensions);	//	Scaling generated image to other sizes
         if (images == null) {
         	return null;
         }
@@ -543,9 +543,9 @@ public class ImageGenerator implements Generator {
 	}
 	
 	private ScalingOptions getScalingOptions(boolean isJpg) {
-		DownscaleQuality quality = DownscaleQuality.HIGH_QUALITY;
+		DownscaleQuality quality = DownscaleQuality.LOW_QUALITY;
 		if (isJpg) {
-			quality = DownscaleQuality.LOW_QUALITY;
+			quality = DownscaleQuality.HIGH_QUALITY;
 		}
 		return new ScalingOptions(quality, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 	}
