@@ -1,8 +1,10 @@
 package com.idega.graphics.image.business;
 
 
-public interface ImageEncoderHome extends com.idega.business.IBOHome
-{
- public ImageEncoder create() throws javax.ejb.CreateException, java.rmi.RemoteException;
+import javax.ejb.CreateException;
+import com.idega.business.IBOHome;
+import java.rmi.RemoteException;
 
+public interface ImageEncoderHome extends IBOHome {
+	public ImageEncoder create() throws CreateException, RemoteException;
 }

@@ -9,17 +9,24 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.media.jai.InterpolationNearest;
 import javax.media.jai.JAI;
+import javax.media.jai.KernelJAI;
 import javax.media.jai.PlanarImage;
 
 import com.idega.business.IBOServiceBean;
 import com.idega.graphics.encoder.gif.Gif89Encoder;
+import com.idega.io.MemoryFileBuffer;
+import com.idega.io.MemoryInputStream;
+import com.idega.io.MemoryOutputStream;
 import com.sun.jimi.core.Jimi;
 import com.sun.jimi.core.JimiException;
 import com.sun.jimi.core.JimiReader;
@@ -65,25 +72,28 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
 	private static final long serialVersionUID = 4568985884351622530L;
 
 // for gif images we have a special encoder  
-  private final static String GIF = "gif";
+  public final static String GIF = "gif";
+  public final static String PNM = "pnm";
+  public final static String PNG = "png";
+  public final static String TIFF = "tiff";
+  public final static String BMP = "bmp";
+  public final static String JPEG = "jpeg";
   
-  private final static String PNG = "png";
-  private final static String PNM = "pnm";
-  private final static String TIFF = "tiff";
-  private final static String BMP = "bmp";
-  private final static String JPEG = "jpeg";
+  public static final String UNKNOWN_MIME_TYPE = "unknown mime type";
+  public static final String INVALID_FILE_EXTENSION = "invalid file extension";
  
  
-  private static final String[] FILE_EXTENSIONS = {
+  public static final String[] FILE_EXTENSIONS = {
     GIF, "gif",
     PNG, "png",
     JPEG, "jpg",
     TIFF, "tif",
-    BMP, "bmp"
+    BMP, "bmp",
+    PNM, "pnm"
   };
   
-  private static final String[] MIME_TYPES_FOR_JAI = {
-    PNG, JPEG, TIFF, BMP };
+  public static final String[] MIME_TYPES_FOR_JAI = {
+    PNG, PNM, JPEG, TIFF, BMP };
   
   private static final String[] IMAGES_TYPES = {
     // description, 
@@ -202,14 +212,15 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
 
     
 
-
+/**
+ * @deprecated Use JAI methods instead like encodePlanarImageToInputStream using getPlanarImage(url) first
+ */
   public void encode(String mimeType, InputStream input, OutputStream output, int width, int heigth) throws IOException {
     
     String resultMime = getResultMimeTypeForInputMimeType(mimeType);
     String formatedInputMime = getFormatedMimeType(mimeType);
   
-    if (ImageEncoder.UNKNOWN_MIME_TYPE.equals(resultMime) ||
-        ImageEncoder.UNKNOWN_MIME_TYPE.equals(formatedInputMime)) {
+    if (UNKNOWN_MIME_TYPE.equals(resultMime) || UNKNOWN_MIME_TYPE.equals(formatedInputMime)) {
 			throw new IOException("Mime type "+ mimeType + " is not recognized");
 		}
 		else if (GIF.equals(formatedInputMime)) {
@@ -228,7 +239,7 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
   * @return String
   */
   private String getFormatedMimeType(String mimeType) {
-    return getValueForMimeType(mimeType, 0, ImageEncoder.UNKNOWN_MIME_TYPE );
+    return getValueForMimeType(mimeType, 0, UNKNOWN_MIME_TYPE );
  }
  
 
@@ -241,7 +252,7 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
   }
 
   public String getResultMimeTypeForInputMimeType(String inputMimeType) {
-    return getValueForMimeType(inputMimeType, 1, ImageEncoder.UNKNOWN_MIME_TYPE );
+    return getValueForMimeType(inputMimeType, 1, UNKNOWN_MIME_TYPE );
  }
     
   public String getResultFileExtensionForInputMimeType(String inputMimeType)  {
@@ -260,7 +271,7 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
   private String getExtensionForFormatedMimeType(String formatedMimeType) {
     String extension = (String)this.extensionTypes.get(formatedMimeType);  
     if (extension == null) {
-			return ImageEncoder.INVALID_FILE_EXTENSION;
+			return INVALID_FILE_EXTENSION;
 		}    
     return extension;
   }
@@ -269,7 +280,7 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
   private String getMimeTypeForJai(String formatedMimeType) {
     String result = (String) this.mimeTypesForJai.get(formatedMimeType);
     if (result == null) {
-			return ImageEncoder.UNKNOWN_MIME_TYPE;
+			return UNKNOWN_MIME_TYPE;
 		}
     return result;
   }
@@ -318,7 +329,7 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
     com.sun.media.jai.codec.ImageEncoder imageEncoder;
     
     String jaiMimeType = getMimeTypeForJai(outputMimeType);
-    if (ImageEncoder.UNKNOWN_MIME_TYPE.equals(jaiMimeType)) {
+    if (UNKNOWN_MIME_TYPE.equals(jaiMimeType)) {
 			throw new IOException("Mime type "+ outputMimeType + " not recognized by JAI");
 		}
 
@@ -425,5 +436,121 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
   
     return para;
   }
+  
+  
+  
+  /**
+   * JAI (java advanced image) operations. Some useful other just experimental
+   */
+	public PlanarImage scale(PlanarImage image, float scale) {
+		ParameterBlock pb = new ParameterBlock();
+		pb.addSource(image);
+		pb.add(scale);
+		pb.add(scale);
+		pb.add(0.0F);
+		pb.add(0.0F);
+		pb.add(new InterpolationNearest());
+		return JAI.create("scale", pb, null);
+	}
+
+	public PlanarImage colorToGray(PlanarImage i) {
+		double[][] matrix = { {0.114D, 0.587D, 0.299D, 0.0D} };
+		ParameterBlock pb = new ParameterBlock();
+		pb.addSource(i);
+		pb.add(matrix);
+		return ( (PlanarImage) JAI.create("bandcombine", pb, null));
+	}
+
+	private static PlanarImage edging(PlanarImage i) {
+		return  (PlanarImage)JAI.create("gradientmagnitude", i,KernelJAI.GRADIENT_MASK_SOBEL_HORIZONTAL, KernelJAI.GRADIENT_MASK_SOBEL_VERTICAL);
+	}
+	
+	public PlanarImage thresholding(PlanarImage i) {
+		//175 ve altini 0'a esle
+		double low[] = { 0d };
+		double high[] = { 175d };
+		ParameterBlock pb = new ParameterBlock();
+		pb.addSource(i);
+		pb.add(low);
+		pb.add(high);
+		pb.add(low);
+		return (PlanarImage)JAI.create("threshold", pb);
+
+	}
+	
+	public PlanarImage dilation(PlanarImage i) {
+		float kernelMatrix[] =
+		{
+			50,50,50,
+			50, 0, 0,
+			50, 0, 0 
+		};
+		KernelJAI kernel = new KernelJAI(3,3,kernelMatrix);
+		ParameterBlock pb = new ParameterBlock();
+		pb.addSource(i);
+		pb.add(kernel);
+		return JAI.create("Dilate", pb);
+	}
+	
+	public void writeToFile(PlanarImage i,String filename) {
+		ParameterBlock pb = new ParameterBlock();
+		pb.addSource(i);
+		pb.add(filename);
+		pb.add("jpeg");
+		JAI.create("filestore", pb);
+	}  
+  
+	/**
+	 * Crops the image and fixes the banding issue by translating it into it self.
+	 * @param image
+	 * @param topX
+	 * @param topY
+	 * @param width
+	 * @param height
+	 * @return
+	 */
+	public PlanarImage crop(PlanarImage image,float topX,float topY, float width, float height){
+		// Create a ParameterBlock with information for the cropping.
+		ParameterBlock pb = new ParameterBlock();
+		pb.addSource(image);
+		pb.add(topX);
+		pb.add(topY);
+		pb.add(width);
+		pb.add(height);
+		
+		// Create the output image by cropping the input image.
+		PlanarImage cropped = JAI.create("crop",pb,null);
+		
+	    // A cropped image will have its origin set to the (x,y) coordinates,
+	    // and with the display method we use it will cause bands on the top
+	    // and left borders. A simple way to solve this is to shift or
+	    // translate the image by (-x,-y) pixels.
+	    pb = new ParameterBlock();
+	    pb.addSource(cropped);
+	    pb.add(-topX);
+	    pb.add(-topY);
+	    // Create the output image by translating itself.
+	    return JAI.create("translate",pb,null);
+	}
+
+  /**
+   * Uses a MemoryFileBuffer to encode the file into an outputstream and then uses the buffer for that stream to create an MemoryInputStream
+   * @param imageType valid JAI image type "JPEG","BMP","PNG","TIFF"...
+   */
+  public InputStream encodePlanarImageToInputStream(PlanarImage image , String imageType){
+
+		MemoryFileBuffer buff = new MemoryFileBuffer();
+		OutputStream outputStream = new MemoryOutputStream(buff);
+		
+		JAI.create("encode", image, outputStream, imageType , null);
+		InputStream s = new MemoryInputStream(buff);
+		
+		return s;
+  }
+  
+  public PlanarImage getPlanarImage(String URL) throws MalformedURLException{
+	  return JAI.create("url", new URL(URL));
+  }
+  
   
 }

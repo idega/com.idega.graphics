@@ -1,17 +1,16 @@
 package com.idega.graphics.image.business;
 
 
-public class ImageEncoderHomeImpl extends com.idega.business.IBOHomeImpl implements ImageEncoderHome
-{
- protected Class getBeanInterfaceClass(){
-  return ImageEncoder.class;
- }
+import javax.ejb.CreateException;
+import com.idega.business.IBOHomeImpl;
 
+public class ImageEncoderHomeImpl extends IBOHomeImpl implements
+		ImageEncoderHome {
+	public Class getBeanInterfaceClass() {
+		return ImageEncoder.class;
+	}
 
- public ImageEncoder create() throws javax.ejb.CreateException{
-  return (ImageEncoder) super.createIBO();
- }
-
-
-
+	public ImageEncoder create() throws CreateException {
+		return (ImageEncoder) super.createIBO();
+	}
 }
