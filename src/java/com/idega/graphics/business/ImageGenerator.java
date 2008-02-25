@@ -152,6 +152,7 @@ public class ImageGenerator implements Generator {
 	 */
 	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width,
 			int height) {
+		//TODO use new JAI methods
 		MemoryFileBuffer buff = new MemoryFileBuffer();
 		OutputStream output = new MemoryOutputStream(buff);
 		InputStream is = null;
