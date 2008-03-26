@@ -36,6 +36,7 @@ import org.xhtmlrenderer.util.ScalingOptions;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.graphics.image.business.ImageEncoder;
+import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.io.MemoryFileBuffer;
@@ -150,8 +151,7 @@ public class ImageGenerator implements Generator {
 	/**
 	 * Encodes image (from InputStream) and uploads to Slide
 	 */
-	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width,
-			int height) {
+	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width, int height) {
 		//TODO use new JAI methods
 		MemoryFileBuffer buff = new MemoryFileBuffer();
 		OutputStream output = new MemoryOutputStream(buff);
@@ -498,32 +498,24 @@ public class ImageGenerator implements Generator {
 	}
 	
 	private IWSlideService getSlideService() {
-		if (service == null) {
-			synchronized (ImageGenerator.class) {
-				try {
-					service = (IWSlideService) IBOLookup.getServiceInstance(IWContext.getInstance(), IWSlideService.class);
-				} catch (IBOLookupException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		initializeSlideService(IWMainApplication.getDefaultIWApplicationContext());
 		return service;
 	}
 	
-	private void initializeSlideService(IWContext iwc) {
-		synchronized (ImageEncoder.class) {
+	private synchronized void initializeSlideService(IWApplicationContext iwac) {
+		if (service == null) {
 			try {
-				service = (IWSlideService) IBOLookup.getServiceInstance(iwc, IWSlideService.class);
+				service = (IWSlideService) IBOLookup.getServiceInstance(iwac, IWSlideService.class);
 			} catch (IBOLookupException e) {
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	private void initializeImageEncoder(IWContext iwc) {
-		synchronized (ImageEncoder.class) {
+	private synchronized void initializeImageEncoder(IWApplicationContext iwac) {
+		if (encoder == null) {
 			try {
-				encoder = (ImageEncoder) IBOLookup.getServiceInstance(iwc, ImageEncoder.class);
+				encoder = (ImageEncoder) IBOLookup.getServiceInstance(iwac, ImageEncoder.class);
 			} catch (IBOLookupException e) {
 				e.printStackTrace();
 			}
@@ -531,15 +523,7 @@ public class ImageGenerator implements Generator {
 	}
 	
 	private ImageEncoder getImageEncoder() {
-		if (encoder == null) {
-			synchronized (ImageGenerator.class) {
-				try {
-					encoder = (ImageEncoder) IBOLookup.getServiceInstance(IWContext.getInstance(), ImageEncoder.class);
-				} catch (IBOLookupException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		initializeImageEncoder(IWMainApplication.getDefaultIWApplicationContext());
 		return encoder;
 	}
 	
