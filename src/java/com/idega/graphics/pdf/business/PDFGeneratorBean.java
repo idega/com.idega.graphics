@@ -22,6 +22,7 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.Page;
 import com.idega.slide.business.IWSlideService;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 
 public class PDFGeneratorBean implements PDFGenerator {
@@ -29,7 +30,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 	private BuilderService builder = null;
 	private DocumentBuilderFactory documentBuilder = null;
 	
-	public boolean generatePDF(IWApplicationContext iwac, Document doc, String fileName, String uploadPath) {
+	public boolean generatePDF(IWContext iwc, Document doc, String fileName, String uploadPath) {
 		if (doc == null || fileName == null || uploadPath == null) { 
 			return false;
 		}
@@ -40,7 +41,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		try {
 			os = new ByteArrayOutputStream();
 			ITextRenderer renderer = new ITextRenderer();
-			renderer.setDocument(doc, null);
+			renderer.setDocument(doc, iwc.getServerURL());
 			renderer.layout();
 			renderer.createPDF(os);
 			buffer = os.toByteArray();
@@ -56,11 +57,17 @@ public class PDFGeneratorBean implements PDFGenerator {
 			return false;
 		}
 		
+		if (!uploadPath.startsWith(CoreConstants.SLASH)) {
+			uploadPath = new StringBuilder(CoreConstants.SLASH).append(uploadPath).toString();
+		}
+		if (!uploadPath.endsWith(CoreConstants.SLASH)) {
+			uploadPath = new StringBuilder(uploadPath).append(CoreConstants.SLASH).toString();
+		}
 		//	Uploading PDF
 		InputStream is = null;
 		try {
 			is = new ByteArrayInputStream(buffer);
-			IWSlideService slide = (IWSlideService) IBOLookup.getServiceInstance(iwac, IWSlideService.class);
+			IWSlideService slide = (IWSlideService) IBOLookup.getServiceInstance(iwc, IWSlideService.class);
 			return slide.uploadFileAndCreateFoldersFromStringAsRoot(uploadPath, fileName, is, "application/pdf", true);
 		} catch(Exception e) {
 			e.printStackTrace();
