@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://www.getahead.ltd.uk/dwr//dwr20.dtd">
+
+<dwr>
+	<allow>
+		<create creator="jsf" javascript="PDFGenerator">
+			<param name="managedBeanName" value="pdfGenerator" />
+      		<param name="class" value="com.idega.graphics.pdf.business.PDFGeneratorBean" />
+      		<include method="generatePDFFromComponent"/>
+      		<include method="generatePDFFromPage"/>
+    	</create>
+	</allow>
+  
+	<signatures>
+	</signatures>
+</dwr>

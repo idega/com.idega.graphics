@@ -39,18 +39,6 @@
  	   	<filter-name>SVGFilter</filter-name>
   		<url-pattern>*.jsvg</url-pattern>
   	</filter-mapping>
-  	
- 	<!-- PDFGeneratorServlet -->	
-	<servlet>
-		<display-name>PDFGeneratorServlet</display-name>
-		<servlet-name>PDFGeneratorServlet</servlet-name>
-		<servlet-class>com.idega.graphics.servlet.PDFGeneratorServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>PDFGeneratorServlet</servlet-name>
-		<url-pattern>/servlet/PDFGeneratorServlet</url-pattern>
-	</servlet-mapping>
 	
 </web-app>
   	

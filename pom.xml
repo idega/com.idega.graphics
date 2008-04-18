@@ -117,12 +117,20 @@
       <version>1.6</version>
       <type>jar</type>
     </dependency>
-    
 	<dependency>
       <groupId>flyingsaucer</groupId>
       <artifactId>core-renderer</artifactId>
-	  <version>7.0-iwbuild1</version>
-      <type>jar</type>
+	  <version>${flyingsaucer-core-renderer-version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>flyingsaucer</groupId>
+    	<artifactId>minium</artifactId>
+    	<version>${flyingsaucer-minium-version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>itextpdf</groupId>
+    	<artifactId>itext-paulo</artifactId>
+    	<version>${itextpdf-itext-paulo-version}</version>
     </dependency>
     <dependency>
       <groupId>jimi</groupId>
