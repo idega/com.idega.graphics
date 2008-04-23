@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.rmi.RemoteException;
 
 import javax.faces.component.UIComponent;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.jdom.output.XMLOutputter;
 import org.w3c.dom.Document;
@@ -24,11 +23,11 @@ import com.idega.presentation.Page;
 import com.idega.slide.business.IWSlideService;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.xml.XmlUtil;
 
 public class PDFGeneratorBean implements PDFGenerator {
 
 	private BuilderService builder = null;
-	private DocumentBuilderFactory documentBuilder = null;
 	
 	public boolean generatePDF(IWContext iwc, Document doc, String fileName, String uploadPath) {
 		if (doc == null || fileName == null || uploadPath == null) { 
@@ -57,11 +56,14 @@ public class PDFGeneratorBean implements PDFGenerator {
 			return false;
 		}
 		
+		if (!fileName.toLowerCase().endsWith(".pdf")) {
+			fileName += ".pdf";
+		}
 		if (!uploadPath.startsWith(CoreConstants.SLASH)) {
-			uploadPath = new StringBuilder(CoreConstants.SLASH).append(uploadPath).toString();
+			uploadPath = CoreConstants.SLASH + uploadPath;
 		}
 		if (!uploadPath.endsWith(CoreConstants.SLASH)) {
-			uploadPath = new StringBuilder(uploadPath).append(CoreConstants.SLASH).toString();
+			uploadPath = uploadPath + CoreConstants.SLASH;
 		}
 		//	Uploading PDF
 		InputStream is = null;
@@ -123,7 +125,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 			return false;
 		}
 		
-		org.jdom.Document doc = builder.getRenderedComponent(iwc, component, cleanHtml);
+		org.jdom.Document doc = builder.getRenderedComponent(iwc, component, cleanHtml, false, false);
 		if (doc == null) {
 			return false;
 		}
@@ -148,14 +150,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		InputStream is = null;
 		try {
 			is = new ByteArrayInputStream(buffer);
-			
-			if (documentBuilder == null) {
-				documentBuilder = DocumentBuilderFactory.newInstance();
-				documentBuilder.setNamespaceAware(false);
-				documentBuilder.setValidating(false);
-			}
-			
-			document = documentBuilder.newDocumentBuilder().parse(is);
+			document = XmlUtil.getDocumentBuilder(false).parse(is);
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
