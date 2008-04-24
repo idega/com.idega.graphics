@@ -10,6 +10,8 @@ import java.rmi.RemoteException;
 import javax.faces.component.UIComponent;
 
 import org.jdom.output.XMLOutputter;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
@@ -25,11 +27,13 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.xml.XmlUtil;
 
+@Scope("session")
+@Service(CoreConstants.SPRING_BEAN_NAME_PDF_GENERATOR)
 public class PDFGeneratorBean implements PDFGenerator {
 
 	private BuilderService builder = null;
 	
-	public boolean generatePDF(IWContext iwc, Document doc, String fileName, String uploadPath) {
+	private boolean generatePDF(IWContext iwc, Document doc, String fileName, String uploadPath) {
 		if (doc == null || fileName == null || uploadPath == null) { 
 			return false;
 		}
@@ -160,8 +164,8 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return generatePDF(iwc, document, fileName, uploadPath);
 	}
 
-	public boolean generatePDFFromComponent(String componentId, String fileName, String uploadPath, boolean cleanHtml) {
-		if (componentId == null) {
+	public boolean generatePDFFromComponent(String componentUUID, String fileName, String uploadPath, boolean cleanHtml) {
+		if (componentUUID == null) {
 			return false;
 		}
 		
@@ -175,7 +179,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 			return false;
 		}
 		
-		UIComponent component = builder.findComponentInPage(iwc, String.valueOf(iwc.getCurrentIBPageID()), componentId);
+		UIComponent component = builder.findComponentInPage(iwc, String.valueOf(iwc.getCurrentIBPageID()), componentUUID);
 		return generatePDF(iwc, component, fileName, uploadPath, cleanHtml);
 	}
 
