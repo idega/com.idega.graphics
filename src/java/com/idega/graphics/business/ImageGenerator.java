@@ -177,7 +177,6 @@ public class ImageGenerator implements Generator {
 	/**
 	 * Generates preview of provided image (url), sets new quality and scales it to multiple images
 	 */
-	@SuppressWarnings("unchecked")
 	public List<BufferedImage> generatePreviews(String url, List<Dimension> dimensions, boolean isJpg, float quality) {
 		if (!isValidString(url) || dimensions == null) {
 			return null;
@@ -570,7 +569,6 @@ public class ImageGenerator implements Generator {
 		return result;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private boolean areValidParameters(List urls, List names, String directory, int width, int height) {
 		if (urls == null || names == null) {
 			return false;

@@ -215,7 +215,8 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
 /**
  * @deprecated Use JAI methods instead like encodePlanarImageToInputStream using getPlanarImage(url) first
  */
-  public void encode(String mimeType, InputStream input, OutputStream output, int width, int heigth) throws IOException {
+  @Deprecated
+	public void encode(String mimeType, InputStream input, OutputStream output, int width, int heigth) throws IOException {
     
     String resultMime = getResultMimeTypeForInputMimeType(mimeType);
     String formatedInputMime = getFormatedMimeType(mimeType);
@@ -458,12 +459,12 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
 		ParameterBlock pb = new ParameterBlock();
 		pb.addSource(i);
 		pb.add(matrix);
-		return ( (PlanarImage) JAI.create("bandcombine", pb, null));
+		return JAI.create("bandcombine", pb, null);
 	}
 
-	private static PlanarImage edging(PlanarImage i) {
-		return  (PlanarImage)JAI.create("gradientmagnitude", i,KernelJAI.GRADIENT_MASK_SOBEL_HORIZONTAL, KernelJAI.GRADIENT_MASK_SOBEL_VERTICAL);
-	}
+	/*private static PlanarImage edging(PlanarImage i) {
+		return  JAI.create("gradientmagnitude", i,KernelJAI.GRADIENT_MASK_SOBEL_HORIZONTAL, KernelJAI.GRADIENT_MASK_SOBEL_VERTICAL);
+	}*/
 	
 	public PlanarImage thresholding(PlanarImage i) {
 		//175 ve altini 0'a esle
@@ -474,7 +475,7 @@ public class ImageEncoderBean extends IBOServiceBean implements com.idega.graphi
 		pb.add(low);
 		pb.add(high);
 		pb.add(low);
-		return (PlanarImage)JAI.create("threshold", pb);
+		return JAI.create("threshold", pb);
 
 	}
 	
