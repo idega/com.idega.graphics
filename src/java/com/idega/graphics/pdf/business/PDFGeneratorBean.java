@@ -12,7 +12,6 @@ import java.util.List;
 
 import javax.faces.component.UIComponent;
 
-import org.htmlcleaner.HtmlCleaner;
 import org.jaxen.JaxenException;
 import org.jaxen.jdom.JDOMXPath;
 import org.jdom.Attribute;
@@ -130,7 +129,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 			doc = getDocumentWithoutInputs(doc);
 		}
 		
-		byte[] memory = getDocumentWithFixedMediaType(doc);
+		byte[] memory = getDocumentWithFixedMediaType(iwc, doc);
 		if (memory == null) {
 			return false;
 		}
@@ -240,7 +239,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return slide;
 	}
 	
-	private byte[] getDocumentWithFixedMediaType(org.jdom.Document document) {
+	private byte[] getDocumentWithFixedMediaType(IWApplicationContext iwac, org.jdom.Document document) {
 		List<Element> styles = getDocumentElements("link", document);
 		if (styles != null) {
 			String mediaAttrName = "media";
@@ -254,22 +253,10 @@ public class PDFGeneratorBean implements PDFGenerator {
 			}
 		}
 		
-		String content = outputter.outputString(document);
-		HtmlCleaner cleaner = new HtmlCleaner(content);
-		cleaner.setOmitDoctypeDeclaration(false);
-		cleaner.setOmitHtmlEnvelope(false);
-		cleaner.setOmitComments(true);
-		cleaner.setOmitXmlDeclaration(true);
-		try {
-			cleaner.clean();
-			content = cleaner.getPrettyXmlAsString();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+		String htmlContent = getBuilderService(iwac).getCleanedHtmlContent(outputter.outputString(document), false, false, true);
 	
-//		System.out.println(content);
-		return content.getBytes();
+//		System.out.println(htmlContent);
+		return htmlContent.getBytes();
 	}
 	
 	private org.jdom.Document getDocumentWithoutInputs(org.jdom.Document document) {
@@ -280,22 +267,38 @@ public class PDFGeneratorBean implements PDFGenerator {
 		//	<input>
 		List<Element> inputs = getDocumentElements("input", document);
 		String typeAttrName = "type";
+		String checkedAttrName = "checked";
 		String className = "replaceForInputStyle";
 		String valueAttrName = "value";
 		Attribute valueAttr = null;
 		String value = null;
+//		String yesLocalizedText = iwrb.getLocalizedString("yes", "Yes");
 		boolean needReplace = true;
-		List<String> typeAttrValues = ListUtil.convertStringArrayToList(new String[] {"hidden"});	//	Inputs we don't want to be replaced
+		//	Inputs we don't want to be replaced
+		List<String> typeAttrValues = ListUtil.convertStringArrayToList(new String[] {"button", "hidden", "image", "password", "reset", "submit"});
+		List<String> textTypeValue = ListUtil.convertStringArrayToList(new String[] {"text"});
+		List<String> checkedAttrValues = ListUtil.convertStringArrayToList(new String[] {"checked", Boolean.TRUE.toString(), CoreConstants.EMPTY});
 		for (Element input: inputs) {
 			needReplace = !doElementHasAttribute(input, typeAttrName, typeAttrValues);
 			
 			if (needReplace) {
-				valueAttr = input.getAttribute(valueAttrName);
-				value = valueAttr == null ? null : valueAttr.getValue();
-				if (value != null) {
-					input.setName(divTag);
-					input.setText(value);
-					setCustomAttribute(input, classAttrName, className);
+				if (doElementHasAttribute(input, typeAttrName, textTypeValue)) {
+					//	Text inputs
+					valueAttr = input.getAttribute(valueAttrName);
+					value = valueAttr == null ? null : valueAttr.getValue();
+					if (value != null) {
+						input.setText(value);
+						input.setName(divTag);
+						setCustomAttribute(input, classAttrName, className);
+					}
+				}
+				else {
+					//	Radio button or check box
+					if (doElementHasAttribute(input, checkedAttrName, checkedAttrValues)) {
+						//	Is checked
+						//	TODO: do we need some special handling?
+//						input.setText(yesLocalizedText);
+					}
 				}
 			}
 		}
