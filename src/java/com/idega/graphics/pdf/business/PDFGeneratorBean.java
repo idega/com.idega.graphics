@@ -379,7 +379,6 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	private List<Element> getDocumentElements(String tagName, Object node) {
 		String xpathExpr = "//"+nameSpaceId+":" + tagName;
 		
