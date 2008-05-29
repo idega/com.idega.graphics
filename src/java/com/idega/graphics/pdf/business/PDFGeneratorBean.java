@@ -4,7 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,6 +25,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
+import org.xml.sax.InputSource;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -62,7 +66,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 		
 		//	Rendering PDF
-		byte[] memory = null;
+		byte[] memory = null;		
 		ByteArrayOutputStream os = null;
 		try {
 			os = new ByteArrayOutputStream();
@@ -135,15 +139,28 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 		
 		Document document = null;
-		InputStream is = null;
+		InputStream stream = null;
+		Reader reader = null;
 		try {
-			is = new ByteArrayInputStream(memory);
-			document = XmlUtil.getDocumentBuilder(false).parse(is);
-		} catch(Exception e) {
+			stream = new ByteArrayInputStream(memory);
+			reader = new InputStreamReader(stream, CoreConstants.ENCODING_UTF8);
+			document = XmlUtil.getDocumentBuilder().parse(new InputSource(reader));
+		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		} finally {
-			closeInputStream(is);
+			closeInputStream(stream);
+			closeReader(reader);
 		}
+//		InputStream is = null;
+//		try {
+//			is = new ByteArrayInputStream(memory);
+//			document = XmlUtil.getDocumentBuilder(false).parse(is);
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//		} finally {
+//			closeInputStream(is);
+//		}
 		
 		return generatePDF(iwc, document, fileName, uploadPath);
 	}
@@ -167,12 +184,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return generatePDF(iwc, component, fileName, uploadPath, replaceInputs);
 	}
 
-	public boolean generatePDFFromPage(String pageUri, String fileName, String uploadPath, boolean replaceInputs) {
-		//	TODO:	remove
-//		pageUri = "/pages";
-//		fileName = "page";
-//		uploadPath = "/files/public";
-		
+	public boolean generatePDFFromPage(String pageUri, String fileName, String uploadPath, boolean replaceInputs) {		
 		if (pageUri == null) {
 			return false;
 		}
@@ -200,6 +212,18 @@ public class PDFGeneratorBean implements PDFGenerator {
 		
 		try {
 			is.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void closeReader(Reader reader) {
+		if (reader == null) {
+			return;
+		}
+		
+		try {
+			reader.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -255,8 +279,12 @@ public class PDFGeneratorBean implements PDFGenerator {
 		
 		String htmlContent = getBuilderService(iwac).getCleanedHtmlContent(outputter.outputString(document), false, false, true);
 	
-//		System.out.println(htmlContent);
-		return htmlContent.getBytes();
+		try {
+			return htmlContent.getBytes(CoreConstants.ENCODING_UTF8);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	private org.jdom.Document getDocumentWithoutInputs(org.jdom.Document document) {
@@ -272,7 +300,6 @@ public class PDFGeneratorBean implements PDFGenerator {
 		String valueAttrName = "value";
 		Attribute valueAttr = null;
 		String value = null;
-//		String yesLocalizedText = iwrb.getLocalizedString("yes", "Yes");
 		boolean needReplace = true;
 		//	Inputs we don't want to be replaced
 		List<String> typeAttrValues = ListUtil.convertStringArrayToList(new String[] {"button", "hidden", "image", "password", "reset", "submit"});
@@ -379,6 +406,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private List<Element> getDocumentElements(String tagName, Object node) {
 		String xpathExpr = "//"+nameSpaceId+":" + tagName;
 		
