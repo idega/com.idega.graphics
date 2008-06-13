@@ -1,4 +1,4 @@
-package com.idega.graphics.business;
+package com.idega.graphics.image.business;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -35,7 +35,7 @@ import org.xhtmlrenderer.util.ScalingOptions;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
-import com.idega.graphics.image.business.ImageEncoder;
+import com.idega.graphics.util.GraphicsConstants;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
@@ -46,9 +46,9 @@ import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
 import com.idega.util.CoreConstants;
 
-public class ImageGenerator implements Generator {
+public class ImageGeneratorImpl implements ImageGenerator {
 	
-	private static final Log log = LogFactory.getLog(ImageGenerator.class);
+	private static final Log log = LogFactory.getLog(ImageGeneratorImpl.class);
 	
 	private static final String EXTERNAL_SERVICE = "http://webdesignbook.net/snapper.php?url=";
 	private static final String IMAGE_WIDTH_PARAM = "&w=";
@@ -63,13 +63,13 @@ public class ImageGenerator implements Generator {
 	private ImageEncoder encoder = null;
 	private Random generator = null;
 	
-	public ImageGenerator() {
+	public ImageGeneratorImpl() {
 		generator = new Random();
 		
 		fileExtension = GraphicsConstants.JPG_FILE_NAME_EXTENSION;
 	}
 	
-	public ImageGenerator(IWContext iwc) {
+	public ImageGeneratorImpl(IWContext iwc) {
 		this();
 		initializeSlideService(iwc);
 		initializeImageEncoder(iwc);
@@ -177,6 +177,7 @@ public class ImageGenerator implements Generator {
 	/**
 	 * Generates preview of provided image (url), sets new quality and scales it to multiple images
 	 */
+	@SuppressWarnings("unchecked")
 	public List<BufferedImage> generatePreviews(String url, List<Dimension> dimensions, boolean isJpg, float quality) {
 		if (!isValidString(url) || dimensions == null) {
 			return null;
@@ -256,7 +257,7 @@ public class ImageGenerator implements Generator {
 	/**
 	 * Generates preview of provided web pages
 	 */
-	public boolean generatePreview(List <String> urls, List <String> names, String uploadDirectory, int width, int height,
+	public boolean generatePreview(List<String> urls, List<String> names, String uploadDirectory, int width, int height,
 			boolean encode, boolean makeJpg, float quality) {
 		if (!areValidParameters(urls, names, uploadDirectory, width, height)) {
 			return false;
@@ -569,7 +570,7 @@ public class ImageGenerator implements Generator {
 		return result;
 	}
 	
-	private boolean areValidParameters(List urls, List names, String directory, int width, int height) {
+	private boolean areValidParameters(List<String> urls, List<String> names, String directory, int width, int height) {
 		if (urls == null || names == null) {
 			return false;
 		}
