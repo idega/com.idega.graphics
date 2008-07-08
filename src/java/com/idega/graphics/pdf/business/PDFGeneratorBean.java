@@ -152,15 +152,6 @@ public class PDFGeneratorBean implements PDFGenerator {
 			closeInputStream(stream);
 			closeReader(reader);
 		}
-//		InputStream is = null;
-//		try {
-//			is = new ByteArrayInputStream(memory);
-//			document = XmlUtil.getDocumentBuilder(false).parse(is);
-//		} catch(Exception e) {
-//			e.printStackTrace();
-//		} finally {
-//			closeInputStream(is);
-//		}
 		
 		return generatePDF(iwc, document, fileName, uploadPath);
 	}
@@ -265,7 +256,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 	
 	private byte[] getDocumentWithFixedMediaType(IWApplicationContext iwac, org.jdom.Document document) {
 		List<Element> styles = getDocumentElements("link", document);
-		if (styles != null) {
+		if (!ListUtil.isEmpty(styles)) {
 			String mediaAttrName = "media";
 			String mediaAttrValue = "all";
 			String typeAttrName = "type";
@@ -278,7 +269,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 		
 		String htmlContent = getBuilderService(iwac).getCleanedHtmlContent(outputter.outputString(document), false, false, true);
-	
+		
 		try {
 			return htmlContent.getBytes(CoreConstants.ENCODING_UTF8);
 		} catch (UnsupportedEncodingException e) {
@@ -408,18 +399,25 @@ public class PDFGeneratorBean implements PDFGenerator {
 	
 	@SuppressWarnings("unchecked")
 	private List<Element> getDocumentElements(String tagName, Object node) {
-		String xpathExpr = "//"+nameSpaceId+":" + tagName;
+		String xpathExprStart = "//";
+		String xpathExprNameSpacePart = nameSpaceId + ":";
 		
 		JDOMXPath xp = null;
+		List<Element> elements = null;
 		try {
-			xp = new JDOMXPath(xpathExpr);
+			xp = new JDOMXPath(new StringBuilder(xpathExprStart).append(xpathExprNameSpacePart).append(tagName).toString());
 			xp.addNamespace(nameSpaceId, nameSpace);
-			return xp.selectNodes(node);
+			elements = xp.selectNodes(node);
+			if (ListUtil.isEmpty(elements)) {
+				xp = new JDOMXPath(new StringBuilder(xpathExprStart).append(tagName).toString());
+				xp.addNamespace(nameSpaceId, nameSpace);
+				elements = xp.selectNodes(node);
+			}
 		} catch (JaxenException e) {
 			e.printStackTrace();
 		}
 		
-		return new ArrayList<Element>();	//	Fake, to avoid NullPointer
+		return ListUtil.isEmpty(elements) ? new ArrayList<Element>(0) : elements;
 	}
 
 }
