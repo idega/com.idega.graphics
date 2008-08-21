@@ -52,8 +52,12 @@ public class PDFGeneratorBean implements PDFGenerator {
 	private ITextRenderer renderer = null;
 	private XMLOutputter outputter = null;
 	
-	private String nameSpaceId = "xmlns";
-	private String nameSpace = "http://www.w3.org/1999/xhtml";
+	private static final String XMLNS_NAME_SPACE_ID = "xmlns";
+	private static final String XHTML_NAME_SPACE = "http://www.w3.org/1999/xhtml";
+	private static final String TAG_DIV = "div";
+	private static final String ATTRIBUTE_CLASS = "class";
+	private static final String ATTRIBUTE_STYLE = "style";
+	private static final String ATTRIBUTE_VALUE_DISPLAY_NONE = "display: none;";
 	
 	public PDFGeneratorBean() {
 		renderer = new ITextRenderer();
@@ -114,7 +118,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return false;
 	}
 	
-	public boolean generatePDF(IWContext iwc, UIComponent component, String fileName, String uploadPath, boolean replaceInputs) {
+	public boolean generatePDF(IWContext iwc, UIComponent component, String fileName, String uploadPath, boolean replaceInputs, boolean checkCustomTags) {
 		if (component == null) {
 			return false;
 		}
@@ -131,6 +135,9 @@ public class PDFGeneratorBean implements PDFGenerator {
 		
 		if (replaceInputs) {
 			doc = getDocumentWithoutInputs(doc);
+		}
+		if (checkCustomTags) {
+			doc = getDocumentWithModifiedTags(doc);
 		}
 		
 		byte[] memory = getDocumentWithFixedMediaType(iwc, doc);
@@ -156,7 +163,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return generatePDF(iwc, document, fileName, uploadPath);
 	}
 
-	public boolean generatePDFFromComponent(String componentUUID, String fileName, String uploadPath, boolean replaceInputs) {
+	public boolean generatePDFFromComponent(String componentUUID, String fileName, String uploadPath, boolean replaceInputs, boolean checkCustomTags) {
 		if (componentUUID == null) {
 			return false;
 		}
@@ -172,10 +179,10 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 		
 		UIComponent component = builder.findComponentInPage(iwc, String.valueOf(iwc.getCurrentIBPageID()), componentUUID);
-		return generatePDF(iwc, component, fileName, uploadPath, replaceInputs);
+		return generatePDF(iwc, component, fileName, uploadPath, replaceInputs, checkCustomTags);
 	}
 
-	public boolean generatePDFFromPage(String pageUri, String fileName, String uploadPath, boolean replaceInputs) {		
+	public boolean generatePDFFromPage(String pageUri, String fileName, String uploadPath, boolean replaceInputs, boolean checkCustomTags) {		
 		if (pageUri == null) {
 			return false;
 		}
@@ -193,7 +200,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 			e.printStackTrace();
 		}
 		
-		return generatePDF(iwc, page, fileName, uploadPath, replaceInputs);
+		return generatePDF(iwc, page, fileName, uploadPath, replaceInputs, checkCustomTags);
 	}
 	
 	private void closeInputStream(InputStream is) {
@@ -260,9 +267,9 @@ public class PDFGeneratorBean implements PDFGenerator {
 			String mediaAttrName = "media";
 			String mediaAttrValue = "all";
 			String typeAttrName = "type";
-			List<String> expextedValues = ListUtil.convertStringArrayToList(new String[] {"text/css"});
+			List<String> expectedValues = ListUtil.convertStringArrayToList(new String[] {"text/css"});
 			for (Element style: styles) {
-				if (doElementHasAttribute(style, typeAttrName, expextedValues)) {
+				if (doElementHasAttribute(style, typeAttrName, expectedValues)) {
 					setCustomAttribute(style, mediaAttrName, mediaAttrValue);
 				}
 			}
@@ -279,8 +286,6 @@ public class PDFGeneratorBean implements PDFGenerator {
 	}
 	
 	private org.jdom.Document getDocumentWithoutInputs(org.jdom.Document document) {
-		String divTag = "div";
-		String classAttrName = "class";
 		List<Element> needlessElements = new ArrayList<Element>();
 		
 		//	<input>
@@ -306,8 +311,8 @@ public class PDFGeneratorBean implements PDFGenerator {
 					value = valueAttr == null ? null : valueAttr.getValue();
 					if (value != null) {
 						input.setText(value);
-						input.setName(divTag);
-						setCustomAttribute(input, classAttrName, className);
+						input.setName(TAG_DIV);
+						setCustomAttribute(input, ATTRIBUTE_CLASS, className);
 					}
 				}
 				else {
@@ -337,7 +342,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 			if (doElementHasAttribute(select, multipleAtrrName, multipleAttrValues)) {	//	Is multiple?
 				//	Will create list: <ul><li></li>...</ul>
 				select.setName(listTag);
-				setCustomAttribute(select, classAttrName, multiSelectClass);
+				setCustomAttribute(select, ATTRIBUTE_CLASS, multiSelectClass);
 				
 				List<Element> options = getDocumentElements(optionTag, select);
 				for (Element option: options) {
@@ -351,8 +356,8 @@ public class PDFGeneratorBean implements PDFGenerator {
 			}
 			else {
 				//	Will convert to <div>
-				select.setName(divTag);
-				setCustomAttribute(select, classAttrName, singleSelectClass);
+				select.setName(TAG_DIV);
+				setCustomAttribute(select, ATTRIBUTE_CLASS, singleSelectClass);
 			}
 		}
 		
@@ -364,8 +369,52 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return document;
 	}
 	
-	private boolean doElementHasAttribute(Element e, String attrName, List<String> expextedValues) {
-		if (e == null || attrName == null || expextedValues == null) {
+	private org.jdom.Document getDocumentWithModifiedTags(org.jdom.Document document) {
+		List<String> expectedValues = null;
+		
+		//	<div>
+		List<Element> divs = getDocumentElements(TAG_DIV, document);
+		if (!ListUtil.isEmpty(divs)) {
+			expectedValues = ListUtil.convertStringArrayToList(new String[] {"deselected-case"});
+			List<String> buttonAreaClassValue = ListUtil.convertStringArrayToList(new String[] {"fbc_button_area"});
+			for (Element div: divs) {
+				if (doElementHasAttribute(div, ATTRIBUTE_CLASS, expectedValues)) {
+					setCustomAttribute(div, ATTRIBUTE_STYLE, "display: block;");
+				}
+				
+				if (doElementHasAttribute(div, ATTRIBUTE_CLASS, buttonAreaClassValue)) {
+					setCustomAttribute(div, ATTRIBUTE_STYLE, ATTRIBUTE_VALUE_DISPLAY_NONE);
+				}
+			}
+		}
+		
+		//	<legend>
+		List<Element> legends = getDocumentElements("legend", document);
+		if (!ListUtil.isEmpty(legends)) {
+			expectedValues = ListUtil.convertStringArrayToList(new String[] {"label"});
+			for (Element legend: legends) {
+				if (doElementHasAttribute(legend, ATTRIBUTE_CLASS, expectedValues)) {
+					setCustomAttribute(legend, ATTRIBUTE_STYLE, ATTRIBUTE_VALUE_DISPLAY_NONE);
+				}
+			}
+		}
+		
+		//	<span>
+		List<Element> spans = getDocumentElements("span", document);
+		if (!ListUtil.isEmpty(spans)) {
+			expectedValues = ListUtil.convertStringArrayToList(new String[] {"help-text"});
+			for (Element span: spans) {
+				if (doElementHasAttribute(span, ATTRIBUTE_CLASS, expectedValues)) {
+					setCustomAttribute(span, ATTRIBUTE_STYLE, ATTRIBUTE_VALUE_DISPLAY_NONE);
+				}
+			}
+		}
+		
+		return document;
+	}
+	
+	private boolean doElementHasAttribute(Element e, String attrName, List<String> expectedValues) {
+		if (e == null || attrName == null || expectedValues == null) {
 			return false;
 		}
 		
@@ -379,7 +428,17 @@ public class PDFGeneratorBean implements PDFGenerator {
 			return false;
 		}
 		
-		return expextedValues.contains(attrValue);
+		if (expectedValues.contains(attrValue)) {
+			return true;
+		}
+		
+		for (String expectedValue: expectedValues) {
+			if (attrValue.indexOf(expectedValue) != -1) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	private void setCustomAttribute(Element e, String attrName, String attrValue) {
@@ -400,17 +459,17 @@ public class PDFGeneratorBean implements PDFGenerator {
 	@SuppressWarnings("unchecked")
 	private List<Element> getDocumentElements(String tagName, Object node) {
 		String xpathExprStart = "//";
-		String xpathExprNameSpacePart = nameSpaceId + ":";
+		String xpathExprNameSpacePart = XMLNS_NAME_SPACE_ID + ":";
 		
 		JDOMXPath xp = null;
 		List<Element> elements = null;
 		try {
 			xp = new JDOMXPath(new StringBuilder(xpathExprStart).append(xpathExprNameSpacePart).append(tagName).toString());
-			xp.addNamespace(nameSpaceId, nameSpace);
+			xp.addNamespace(XMLNS_NAME_SPACE_ID, XHTML_NAME_SPACE);
 			elements = xp.selectNodes(node);
 			if (ListUtil.isEmpty(elements)) {
 				xp = new JDOMXPath(new StringBuilder(xpathExprStart).append(tagName).toString());
-				xp.addNamespace(nameSpaceId, nameSpace);
+				xp.addNamespace(XMLNS_NAME_SPACE_ID, XHTML_NAME_SPACE);
 				elements = xp.selectNodes(node);
 			}
 		} catch (JaxenException e) {
