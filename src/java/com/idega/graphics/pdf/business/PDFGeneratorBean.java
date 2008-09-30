@@ -12,6 +12,8 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.faces.component.UIComponent;
 
@@ -60,12 +62,16 @@ public class PDFGeneratorBean implements PDFGenerator {
 	private static final String ATTRIBUTE_VALUE_DISPLAY_NONE = "display: none;";
 	
 	public PDFGeneratorBean() {
-		renderer = new ITextRenderer();
+		try {
+			renderer = new ITextRenderer();
+		} catch(Exception e) {
+			Logger.getLogger(PDFGeneratorBean.class.getName()).log(Level.SEVERE, "Error creating bean!", e);
+		}
 		outputter = new XMLOutputter(Format.getPrettyFormat());
 	}
 	
 	private boolean generatePDF(IWContext iwc, Document doc, String fileName, String uploadPath) {
-		if (doc == null || fileName == null || uploadPath == null) { 
+		if (renderer == null || doc == null || fileName == null || uploadPath == null) { 
 			return false;
 		}
 		
@@ -132,6 +138,8 @@ public class PDFGeneratorBean implements PDFGenerator {
 		if (doc == null) {
 			return false;
 		}
+//		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
+//		System.out.println(output.outputString(doc));
 		
 		if (replaceInputs) {
 			doc = getDocumentWithoutInputs(doc);
