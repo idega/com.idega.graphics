@@ -42,6 +42,7 @@ import com.idega.slide.business.IWSlideService;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.xml.XmlUtil;
 
 @Scope("session")
@@ -71,8 +72,12 @@ public class PDFGeneratorBean implements PDFGenerator {
 	}
 	
 	private boolean generatePDF(IWContext iwc, Document doc, String fileName, String uploadPath) {
-		if (renderer == null || doc == null || fileName == null || uploadPath == null) { 
-			return false;
+		return upload(iwc, getPDFBytes(iwc, doc), fileName, uploadPath);
+	}
+	
+	private byte[] getPDFBytes(IWContext iwc, Document doc) {
+		if (renderer == null || doc == null) {
+			return null;
 		}
 		
 		//	Rendering PDF
@@ -86,17 +91,17 @@ public class PDFGeneratorBean implements PDFGenerator {
 			memory = os.toByteArray();
 		} catch(Exception e) {
 			e.printStackTrace();
-			return false;
+			return null;
 		} finally {
 			closeOutputStream(os);
 		}
 		
-		return upload(iwc, memory, fileName, uploadPath);
+		return memory;
 	}
 	
 	private boolean upload(IWContext iwc, byte[] memory, String fileName, String uploadPath) {
 		//	Checking result of rendering process
-		if (memory == null) {
+		if (memory == null || StringUtil.isEmpty(fileName) || StringUtil.isEmpty(uploadPath)) {
 			return false;
 		}
 		
@@ -125,18 +130,27 @@ public class PDFGeneratorBean implements PDFGenerator {
 	}
 	
 	public boolean generatePDF(IWContext iwc, UIComponent component, String fileName, String uploadPath, boolean replaceInputs, boolean checkCustomTags) {
-		if (component == null) {
+		Document document = getDocumentToConvertToPDF(iwc, component, replaceInputs, checkCustomTags);
+		if (document == null) {
 			return false;
+		}
+		
+		return generatePDF(iwc, document, fileName, uploadPath);
+	}
+	
+	private Document getDocumentToConvertToPDF(IWContext iwc, UIComponent component, boolean replaceInputs, boolean checkCustomTags) {
+		if (component == null) {
+			return null;
 		}
 		
 		BuilderService builder = getBuilderService(iwc);
 		if (builder == null) {
-			return false;
+			return null;
 		}
 		
 		org.jdom.Document doc = builder.getRenderedComponent(iwc, component, true, false, false);
 		if (doc == null) {
-			return false;
+			return null;
 		}
 //		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
 //		System.out.println(output.outputString(doc));
@@ -150,7 +164,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		
 		byte[] memory = getDocumentWithFixedMediaType(iwc, doc);
 		if (memory == null) {
-			return false;
+			return null;
 		}
 		
 		Document document = null;
@@ -162,13 +176,13 @@ public class PDFGeneratorBean implements PDFGenerator {
 			document = XmlUtil.getDocumentBuilder().parse(new InputSource(reader));
 		} catch (Exception e) {
 			e.printStackTrace();
-			return false;
+			return null;
 		} finally {
 			closeInputStream(stream);
 			closeReader(reader);
 		}
 		
-		return generatePDF(iwc, document, fileName, uploadPath);
+		return document;
 	}
 
 	public boolean generatePDFFromComponent(String componentUUID, String fileName, String uploadPath, boolean replaceInputs, boolean checkCustomTags) {
@@ -485,6 +499,15 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 		
 		return ListUtil.isEmpty(elements) ? new ArrayList<Element>(0) : elements;
+	}
+
+	public InputStream getStreamToGeneratedPDF(IWContext iwc, UIComponent component, boolean replaceInputs, boolean checkCustomTags) {
+		byte[] pdfMemory = getPDFBytes(iwc, getDocumentToConvertToPDF(iwc, component, replaceInputs, checkCustomTags));
+		if (pdfMemory == null) {
+			return null;
+		}
+		
+		return new ByteArrayInputStream(pdfMemory);
 	}
 
 }
