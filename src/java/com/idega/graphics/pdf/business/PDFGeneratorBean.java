@@ -138,6 +138,26 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return generatePDF(iwc, document, fileName, uploadPath);
 	}
 	
+	private void uploadSourceToSlide(IWContext iwc, org.jdom.Document doc) {
+		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
+		
+		IWSlideService slide = null;
+		try {
+			slide = (IWSlideService) IBOLookup.getServiceInstance(iwc, IWSlideService.class);
+		} catch (IBOLookupException e) {
+			e.printStackTrace();
+		}
+		if (slide == null) {
+			return;
+		}
+		Logger.getLogger(PDFGeneratorBean.class.getName()).log(Level.WARNING, "Uploading HTML code for PDF... Don't do this when CSS for PDF is made!");
+		try {
+			slide.uploadFileAndCreateFoldersFromStringAsRoot("/files/public/", "html_for_pdf.html", output.outputString(doc), "text/html", true);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private Document getDocumentToConvertToPDF(IWContext iwc, UIComponent component, boolean replaceInputs, boolean checkCustomTags) {
 		if (component == null) {
 			return null;
@@ -152,8 +172,9 @@ public class PDFGeneratorBean implements PDFGenerator {
 		if (doc == null) {
 			return null;
 		}
-//		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
-//		System.out.println(output.outputString(doc));
+		
+		//	TODO: remove this when CSS for PDF is made
+		uploadSourceToSlide(iwc, doc);
 		
 		if (replaceInputs) {
 			doc = getDocumentWithoutInputs(doc);
