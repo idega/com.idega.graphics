@@ -1,5 +1,5 @@
 /*
- * $Id: SVGFilter.java,v 1.8 2006/03/22 11:42:19 tryggvil Exp $
+ * $Id: SVGFilter.java,v 1.9 2008/11/05 16:40:02 laddi Exp $
  * Created on 18.7.2004 by Tryggvi Larusson
  *
  * Copyright (C) 2004-2005 Idega Software hf. All Rights Reserved.
@@ -10,6 +10,8 @@
 package com.idega.graphics.filter;
 
 import java.io.IOException;
+import java.util.logging.Logger;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -26,10 +28,10 @@ import javax.servlet.http.HttpServletResponse;
  * This filter is mapped by default on urls with the patterns *.psvg and *.jsvg , and the default behaviour is to try
  * to render the image out to PNG even if the browser accepts viewing svg.
  * </p>
- *  Last modified: $Date: 2006/03/22 11:42:19 $ by $Author: tryggvil $
+ *  Last modified: $Date: 2008/11/05 16:40:02 $ by $Author: laddi $
  * 
  * @author <a href="mailto:tryggvil@idega.com">Tryggvi Larusson</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class SVGFilter implements Filter {
 	
@@ -47,7 +49,7 @@ public class SVGFilter implements Filter {
 	 * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
 	 */
 	public void init(FilterConfig arg0) throws ServletException {
-		System.out.println("[idegaWebApp] : Starting SVGFilter");
+		Logger.getLogger(this.getClass().getName()).info("[idegaWebApp] : Starting SVGFilter");
 	}
 
 	
