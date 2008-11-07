@@ -49,6 +49,8 @@ import com.idega.util.xml.XmlUtil;
 @Service(CoreConstants.SPRING_BEAN_NAME_PDF_GENERATOR)
 public class PDFGeneratorBean implements PDFGenerator {
 
+	private static final Logger LOGGER = Logger.getLogger(PDFGeneratorBean.class.getName());
+	
 	private IWSlideService slide = null;
 	private BuilderService builder = null;
 	
@@ -66,7 +68,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		try {
 			renderer = new ITextRenderer();
 		} catch(Exception e) {
-			Logger.getLogger(PDFGeneratorBean.class.getName()).log(Level.SEVERE, "Error creating bean!", e);
+			LOGGER.log(Level.SEVERE, "Error creating bean!", e);
 		}
 		outputter = new XMLOutputter(Format.getPrettyFormat());
 	}
@@ -79,6 +81,9 @@ public class PDFGeneratorBean implements PDFGenerator {
 		if (renderer == null || doc == null) {
 			return null;
 		}
+		
+		//	TODO: remove this when CSS for PDF is made
+		uploadSourceToSlide(iwc, doc);
 		
 		//	Rendering PDF
 		byte[] memory = null;		
@@ -138,7 +143,13 @@ public class PDFGeneratorBean implements PDFGenerator {
 		return generatePDF(iwc, document, fileName, uploadPath);
 	}
 	
-	private void uploadSourceToSlide(IWContext iwc, org.jdom.Document doc) {
+	private void uploadSourceToSlide(IWContext iwc, Document document) {
+		org.jdom.Document doc = XmlUtil.getJDOMXMLDocument(document);
+		if (doc == null) {
+			LOGGER.log(Level.WARNING, "Document is null!");
+			return;
+		}
+		
 		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
 		
 		IWSlideService slide = null;
@@ -150,7 +161,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		if (slide == null) {
 			return;
 		}
-		Logger.getLogger(PDFGeneratorBean.class.getName()).log(Level.WARNING, "Uploading HTML code for PDF... Don't do this when CSS for PDF is made!");
+		LOGGER.log(Level.WARNING, "Uploading HTML code for PDF... Don't do this when CSS for PDF is made!");
 		try {
 			slide.uploadFileAndCreateFoldersFromStringAsRoot("/files/public/", "html_for_pdf.html", output.outputString(doc), "text/html", true);
 		} catch (RemoteException e) {
@@ -172,9 +183,6 @@ public class PDFGeneratorBean implements PDFGenerator {
 		if (doc == null) {
 			return null;
 		}
-		
-		//	TODO: remove this when CSS for PDF is made
-		uploadSourceToSlide(iwc, doc);
 		
 		if (replaceInputs) {
 			doc = getDocumentWithoutInputs(doc);
