@@ -163,7 +163,7 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 		LOGGER.log(Level.WARNING, "Uploading HTML code for PDF... Don't do this when CSS for PDF is made!");
 		try {
-			slide.uploadFileAndCreateFoldersFromStringAsRoot("/files/public/", "html_for_pdf.html", output.outputString(doc), "text/html", true);
+			slide.uploadFileAndCreateFoldersFromStringAsRoot(CoreConstants.PUBLIC_PATH + CoreConstants.SLASH, "html_for_pdf.html", output.outputString(doc), "text/html", true);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
