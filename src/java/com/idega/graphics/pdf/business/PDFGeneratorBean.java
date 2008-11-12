@@ -368,10 +368,9 @@ public class PDFGeneratorBean implements PDFGenerator {
 				}
 				else {
 					//	Radio button or check box
-					if (doElementHasAttribute(input, checkedAttrName, checkedAttrValues)) {
-						//	Is checked
-						//	TODO: do we need some special handling?
-//						input.setText(yesLocalizedText);
+					if (!doElementHasAttribute(input, checkedAttrName, checkedAttrValues)) {
+						//	We need to hide not selected options
+						setCustomAttributeToNextElement(input, ATTRIBUTE_STYLE, ATTRIBUTE_VALUE_DISPLAY_NONE);
 					}
 				}
 			}
@@ -418,6 +417,41 @@ public class PDFGeneratorBean implements PDFGenerator {
 		}
 		
 		return document;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void setCustomAttributeToNextElement(Element element, String attrName, String attrValue) {
+		if (element == null) {
+			return;
+		}
+		
+		Element parent = element.getParentElement();
+		if (parent == null) {
+			return;
+		}
+		
+		List<Element> children = parent.getChildren();
+		if (ListUtil.isEmpty(children)) {
+			return;
+		}
+		
+		Element nextElement = null;
+		for (Iterator<Element> childrenIter = children.iterator(); (childrenIter.hasNext() && nextElement == null);) {
+			nextElement = childrenIter.next();
+
+			if (nextElement.equals(element) && childrenIter.hasNext()) {
+				nextElement = childrenIter.next();
+			}
+			else {
+				nextElement = null;
+			}
+		}
+		
+		if (nextElement == null) {
+			return;
+		}
+		
+		setCustomAttribute(nextElement, attrName, attrValue);
 	}
 	
 	private org.jdom.Document getDocumentWithModifiedTags(org.jdom.Document document) {
