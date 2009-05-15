@@ -505,7 +505,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	private synchronized void initializeSlideService(IWApplicationContext iwac) {
 		if (service == null) {
 			try {
-				service = (IWSlideService) IBOLookup.getServiceInstance(iwac, IWSlideService.class);
+				service = IBOLookup.getServiceInstance(iwac, IWSlideService.class);
 			} catch (IBOLookupException e) {
 				e.printStackTrace();
 			}
@@ -515,7 +515,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	private synchronized void initializeImageEncoder(IWApplicationContext iwac) {
 		if (encoder == null) {
 			try {
-				encoder = (ImageEncoder) IBOLookup.getServiceInstance(iwac, ImageEncoder.class);
+				encoder = IBOLookup.getServiceInstance(iwac, ImageEncoder.class);
 			} catch (IBOLookupException e) {
 				e.printStackTrace();
 			}
