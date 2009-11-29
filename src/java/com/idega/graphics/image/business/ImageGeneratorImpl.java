@@ -21,11 +21,11 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.xhtmlrenderer.simple.Graphics2DRenderer;
 import org.xhtmlrenderer.swing.Java2DRenderer;
 import org.xhtmlrenderer.util.DownscaleQuality;
@@ -45,10 +45,12 @@ import com.idega.io.MemoryOutputStream;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
 import com.idega.util.CoreConstants;
+import com.idega.util.IOUtil;
+import com.idega.util.StringUtil;
 
 public class ImageGeneratorImpl implements ImageGenerator {
 	
-	private static final Log log = LogFactory.getLog(ImageGeneratorImpl.class);
+	private static final Logger LOGGER = Logger.getLogger(ImageGeneratorImpl.class.getName());
 	
 	private static final String EXTERNAL_SERVICE = "http://webdesignbook.net/snapper.php?url=";
 	private static final String IMAGE_WIDTH_PARAM = "&w=";
@@ -144,7 +146,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			return null;
 		} finally {
 			file.delete();
-			closeOutputStream(fos);
+			IOUtil.close(fos);
 		}
 	}
 	
@@ -168,8 +170,8 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			e.printStackTrace();
 			return false;
 		} finally {
-			closeInputStream(stream);
-			closeOutputStream(output);
+			IOUtil.close(stream);
+			IOUtil.close(output);
 		}
 		return result;
 	}
@@ -179,7 +181,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<BufferedImage> generatePreviews(String url, List<Dimension> dimensions, boolean isJpg, float quality) {
-		if (!isValidString(url) || dimensions == null) {
+		if (StringUtil.isEmpty(url) || dimensions == null) {
 			return null;
 		}
 		
@@ -217,7 +219,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		isExternalService = false;
 
 		long end = System.currentTimeMillis();
-		log.info(new StringBuffer("Got images in ").append((end - start)).append(" ms: ").append(url));
+		LOGGER.info(new StringBuffer("Got images in ").append((end - start)).append(" ms: ").append(url).toString());
 
 		return allImages;
 	}
@@ -226,7 +228,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	 * Generates preview of provided web page
 	 */
 	public boolean generatePreview(String url, String fileName, String uploadDirectory, int width, int height, boolean encode, boolean makeJpg, float quality) {
-		if (!isValidString(url) || !isValidString(fileName) || !isValidString(uploadDirectory) || !isValidInt(width) ||
+		if (StringUtil.isEmpty(url) || StringUtil.isEmpty(fileName) || StringUtil.isEmpty(uploadDirectory) || !isValidInt(width) ||
 				!isValidInt(height)) {
 			return false;
 		}
@@ -235,7 +237,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		InputStream stream = getImageInputStream(url, width, height, makeJpg, quality);
 		String fullName = new StringBuffer(fileName).append(".").append(getFileExtension()).toString();
 		if (stream == null) {
-			log.error("Error getting InputStream");
+			LOGGER.warning("Error getting InputStream");
 			return false;
 		}
 		
@@ -285,7 +287,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			e.printStackTrace();
 			return null;
 		}
-		closeInputStream(imageStream);
+		IOUtil.close(imageStream);
 		return getScaledImage(originalImage, width, height, isJpg);
 	}
 	
@@ -370,7 +372,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		}
 		
 		long start = System.currentTimeMillis();
-		log.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile));
+		LOGGER.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile).toString());
 		String errorMessage = "Unable to generate image with XHTMLRenderer: ";
 		
 		boolean useOldGenerator = true;
@@ -393,8 +395,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			try {
 				image = Graphics2DRenderer.renderToImage(urlToFile, width, height);
 			} catch (Exception e) {
-				log.error(new StringBuffer(errorMessage).append(urlToFile));
-				e.printStackTrace();
+				LOGGER.log(Level.WARNING, errorMessage.concat(urlToFile), e);
 				return null;
 			}
 		}
@@ -409,8 +410,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			try {
 				image = renderer.getImage();
 			} catch (Exception e) {
-				log.error(new StringBuffer(errorMessage).append(urlToFile));
-				e.printStackTrace();
+				LOGGER.log(Level.WARNING, errorMessage.concat(urlToFile), e);
 				return null;
 			}
 		}
@@ -428,7 +428,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		}
 		
 		long end = System.currentTimeMillis();
-		log.info(new StringBuffer("XHTMLRenderer: success in ").append((end - start)).append(" ms: ").append(urlToFile));
+		LOGGER.info(new StringBuffer("XHTMLRenderer: success in ").append((end - start)).append(" ms: ").append(urlToFile).toString());
 		
 		return image;
 	}
@@ -437,18 +437,17 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	 * Returns URL: a link to service to read generated image
 	 */
 	public URL generateImageURLWithExternalService(String urlToFile, int width, int height) {
-		log.info("Trying with external service: " + urlToFile);
+		LOGGER.info("Trying with external service: ".concat(urlToFile));
 		URL url = null;
 		try {
 			url = new URL(new StringBuffer(EXTERNAL_SERVICE).append(urlToFile).append(IMAGE_WIDTH_PARAM).append(width)
 					.append(IMAGE_HEIGHT_PARAM).append(height).toString());
 		}
 		catch (MalformedURLException e) {
-			log.error("Unable to generate image with external service: " + urlToFile);
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "Unable to generate image with external service: ".concat(urlToFile), e);
 			return null;
 		}
-		log.info("External service: success: " + urlToFile);
+		LOGGER.info("External service: success: ".concat(urlToFile));
 		return url;
 	}
 
@@ -488,7 +487,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		}
 			
 		long end = System.currentTimeMillis();
-		log.info(new StringBuffer("Got image InputStream in ").append((end - start)).append(" ms: ").append(urlToFile));
+		LOGGER.info(new StringBuffer("Got image InputStream in ").append((end - start)).append(" ms: ").append(urlToFile).toString());
 			
 		return stream;
 	}
@@ -558,14 +557,14 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		try {
 			if (!getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream,
 					new StringBuffer(MIME_TYPE).append(getFileExtension()).toString(), true)) {
-				log.error("Error uploading file: " + fullName);
+				LOGGER.warning("Error uploading file: ".concat(fullName));
 				result = false;
 			}
 		} catch(RemoteException e) {
 			e.printStackTrace();
 			return false;
 		} finally {
-			closeInputStream(stream);
+			IOUtil.close(stream);
 		}
 		return result;
 	}
@@ -577,7 +576,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		if (urls.size() != names.size()) {
 			return false;
 		}
-		if (!isValidString(directory)) {
+		if (StringUtil.isEmpty(directory)) {
 			return false;
 		}
 		if (!isValidInt(width) || !isValidInt(height)) {
@@ -591,45 +590,5 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			return true;
 		}
 		return false;
-	}
-	
-	private boolean isValidString(String value) {
-		if (value == null) {
-			return false;
-		}
-		if ("".equals(value)) {
-			return false;
-		}
-		return true;
-	}
-	
-	private boolean closeInputStream(InputStream is) {
-		if (is == null) {
-			log.error("InputStream is null");
-			return false;
-		}
-		try {
-			is.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			log.error("Unable to close InputStream");
-			return false;
-		}
-		return true;
-	}
-	
-	private boolean closeOutputStream(OutputStream os) {
-		if (os == null) {
-			log.error("OutputStream is null");
-			return false;
-		}
-		try {
-			os.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			log.error("Unable to close OutputStream");
-			return false;
-		}
-		return true;
 	}
 }
