@@ -32,6 +32,7 @@ import org.xhtmlrenderer.util.DownscaleQuality;
 import org.xhtmlrenderer.util.FSImageWriter;
 import org.xhtmlrenderer.util.ImageUtil;
 import org.xhtmlrenderer.util.ScalingOptions;
+import org.xhtmlrenderer.util.XRLog;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -179,7 +180,6 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	/**
 	 * Generates preview of provided image (url), sets new quality and scales it to multiple images
 	 */
-	@SuppressWarnings("unchecked")
 	public List<BufferedImage> generatePreviews(String url, List<Dimension> dimensions, boolean isJpg, float quality) {
 		if (StringUtil.isEmpty(url) || dimensions == null) {
 			return null;
@@ -202,7 +202,8 @@ public class ImageGeneratorImpl implements ImageGenerator {
 
         //	Scaling image, creating multiple images
         ScalingOptions options = getScalingOptions(isJpg);
-        List images = ImageUtil.scaleMultiple(options, image, dimensions);	//	Scaling generated image to other sizes
+        @SuppressWarnings("unchecked")
+		List<Object> images = ImageUtil.scaleMultiple(options, image, dimensions);	//	Scaling generated image to other sizes
         if (images == null) {
         	return null;
         }
@@ -390,6 +391,8 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			}
 		}
 		
+		XRLog.setLoggingEnabled(true);
+		XRLog.setLevel(XRLog.EXCEPTION, Level.WARNING);
 		BufferedImage image = null;
 		if (useOldGenerator) {
 			try {
@@ -398,13 +401,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 				LOGGER.log(Level.WARNING, errorMessage.concat(urlToFile), e);
 				return null;
 			}
-		}
-		else {
+		} else {
 			Java2DRenderer renderer = new Java2DRenderer(urlToFile, width, height);
 			if (isJpg) {
 				renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
-			}
-			else {
+			} else {
 				renderer.setBufferedImageType(BufferedImage.TYPE_INT_ARGB);
 			}
 			try {
@@ -417,12 +418,10 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		
 		if (useOldGenerator) {
 			setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
-		}
-		else {
+		} else {
 			if (isJpg) {
 				setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
-			}
-			else {
+			} else {
 				setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
 			}
 		}
@@ -442,8 +441,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		try {
 			url = new URL(new StringBuffer(EXTERNAL_SERVICE).append(urlToFile).append(IMAGE_WIDTH_PARAM).append(width)
 					.append(IMAGE_HEIGHT_PARAM).append(height).toString());
-		}
-		catch (MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			LOGGER.log(Level.WARNING, "Unable to generate image with external service: ".concat(urlToFile), e);
 			return null;
 		}
