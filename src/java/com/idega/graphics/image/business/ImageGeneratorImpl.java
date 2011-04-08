@@ -25,7 +25,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
+import javax.jcr.RepositoryException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.xhtmlrenderer.simple.Graphics2DRenderer;
 import org.xhtmlrenderer.swing.Java2DRenderer;
 import org.xhtmlrenderer.util.DownscaleQuality;
@@ -43,43 +45,46 @@ import com.idega.io.MemoryFileBuffer;
 import com.idega.io.MemoryInputStream;
 import com.idega.io.MemoryOutputStream;
 import com.idega.presentation.IWContext;
-import com.idega.slide.business.IWSlideService;
+import com.idega.repository.RepositoryService;
 import com.idega.util.CoreConstants;
 import com.idega.util.IOUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 public class ImageGeneratorImpl implements ImageGenerator {
-	
+
 	private static final Logger LOGGER = Logger.getLogger(ImageGeneratorImpl.class.getName());
-	
+
 	private static final String EXTERNAL_SERVICE = "http://webdesignbook.net/snapper.php?url=";
 	private static final String IMAGE_WIDTH_PARAM = "&w=";
 	private static final String IMAGE_HEIGHT_PARAM = "&h=";
 	private static final String MIME_TYPE = "image/";
-	
+
 	private String fileExtension = null;
-	
+
 	private boolean isExternalService = false;
 
-	private IWSlideService service = null;
 	private ImageEncoder encoder = null;
 	private Random generator = null;
-	
+
+	@Autowired
+	private RepositoryService repository;
+
 	public ImageGeneratorImpl() {
 		generator = new Random();
-		
+
 		fileExtension = GraphicsConstants.JPG_FILE_NAME_EXTENSION;
 	}
-	
+
 	public ImageGeneratorImpl(IWContext iwc) {
 		this();
-		initializeSlideService(iwc);
 		initializeImageEncoder(iwc);
 	}
-	
+
 	/**
 	 * Converts ARGB (png) to RGB (jpg, gif)
 	 */
+	@Override
 	public BufferedImage getConvertedImageFromPNGToJPG(BufferedImage originalImage) {
 		if (originalImage == null) {
 			return null;
@@ -94,10 +99,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
         g.dispose();
         return convertedImage;
 	}
-	
+
 	/**
 	 * Sets new quality to image
 	 */
+	@Override
 	public BufferedImage getImageWithNewQuality(BufferedImage originalImage, float quality, boolean isJpgImage) {
 		if (originalImage == null) {
 			return null;
@@ -128,7 +134,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			e.printStackTrace();
 			return null;
 		}
-		
+
 		FSImageWriter imageWriter = null;
 		if (isJpgImage) {
 			imageWriter = FSImageWriter.newJpegWriter(quality);
@@ -137,7 +143,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			imageWriter = new FSImageWriter();
 			imageWriter.setWriteCompressionQuality(quality);
 		}
-		
+
         try {
 			imageWriter.write(originalImage, fos);
 			return ImageIO.read(file);
@@ -149,10 +155,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			IOUtil.close(fos);
 		}
 	}
-	
+
 	/**
 	 * Encodes image (from InputStream) and uploads to Slide
 	 */
+	@Override
 	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width, int height) {
 		//TODO use new JAI methods
 		MemoryFileBuffer buff = new MemoryFileBuffer();
@@ -175,21 +182,22 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Generates preview of provided image (url), sets new quality and scales it to multiple images
 	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public List<BufferedImage> generatePreviews(String url, List<Dimension> dimensions, boolean isJpg, float quality) {
 		if (StringUtil.isEmpty(url) || dimensions == null) {
 			return null;
 		}
-		
+
 		BufferedImage image = getImage(url, GraphicsConstants.GENERATED_IMAGE_HEIGHT, GraphicsConstants.GENERATED_IMAGE_WIDTH, isJpg);	//	"View" to image
 		if (image == null) {
 			return null;
 		}
-		
+
 		long start = System.currentTimeMillis();
 
         //	Setting new quality
@@ -202,11 +210,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 
         //	Scaling image, creating multiple images
         ScalingOptions options = getScalingOptions(isJpg);
-        List images = ImageUtil.scaleMultiple(options, image, dimensions);	//	Scaling generated image to other sizes
+        List<Object> images = ImageUtil.scaleMultiple(options, image, dimensions);	//	Scaling generated image to other sizes
         if (images == null) {
         	return null;
         }
-        
+
         List<BufferedImage> allImages = new ArrayList<BufferedImage>(images.size());
         Object o = null;
         for (int i = 0; i < images.size(); i++) {
@@ -223,16 +231,17 @@ public class ImageGeneratorImpl implements ImageGenerator {
 
 		return allImages;
 	}
-	
+
 	/**
 	 * Generates preview of provided web page
 	 */
+	@Override
 	public boolean generatePreview(String url, String fileName, String uploadDirectory, int width, int height, boolean encode, boolean makeJpg, float quality) {
 		if (StringUtil.isEmpty(url) || StringUtil.isEmpty(fileName) || StringUtil.isEmpty(uploadDirectory) || !isValidInt(width) ||
 				!isValidInt(height)) {
 			return false;
 		}
-		
+
 		boolean result = true;
 		InputStream stream = getImageInputStream(url, width, height, makeJpg, quality);
 		String fullName = new StringBuffer(fileName).append(".").append(getFileExtension()).toString();
@@ -240,11 +249,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			LOGGER.warning("Error getting InputStream");
 			return false;
 		}
-		
+
 		if (isExternalService) {
 			return uploadImage(uploadDirectory, fullName, stream);
 		}
-		
+
 		if (encode) {
 			result = encodeAndUploadImage(uploadDirectory, fullName, new StringBuffer(MIME_TYPE).append(getFileExtension()).toString(),
 					stream, width, height);
@@ -259,23 +268,25 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	/**
 	 * Generates preview of provided web pages
 	 */
+	@Override
 	public boolean generatePreview(List<String> urls, List<String> names, String uploadDirectory, int width, int height,
 			boolean encode, boolean makeJpg, float quality) {
 		if (!areValidParameters(urls, names, uploadDirectory, width, height)) {
 			return false;
 		}
-		
+
 		boolean result = true;
-		
+
 		for (int i = 0; i < urls.size(); i++) {
 			result = generatePreview(urls.get(i), names.get(i), uploadDirectory, width, height, encode, makeJpg, quality);
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Scales image to provided dimensions
 	 */
+	@Override
 	public Image getScaledImage(InputStream imageStream, int width, int height, boolean isJpg) {
 		if (imageStream == null) {
 			return null;
@@ -290,28 +301,30 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		IOUtil.close(imageStream);
 		return getScaledImage(originalImage, width, height, isJpg);
 	}
-	
+
 	/**
 	 * Scales image to provided dimensions
 	 */
+	@Override
 	public Image getScaledImage(BufferedImage originalImage, int width, int height, boolean isJpg) {
 		if (originalImage == null) {
 			return null;
 		}
 		ScalingOptions scalingOptions = getScalingOptions(isJpg);
-				
+
 		scalingOptions.setTargetDimensions(new Dimension(width, height));
 		return ImageUtil.getScaledInstance(scalingOptions, originalImage);
 	}
-	
+
 	/**
 	 * Creates InputStream from BufferedImage
 	 */
+	@Override
 	public InputStream getImageInputStream(BufferedImage image, String extension) {
 		if (image == null || extension == null) {
 			return null;
 		}
-		
+
 		//	Building InputStream
 		String fileName = new StringBuffer("temp_").append(generator.nextInt(Integer.MAX_VALUE)).append(CoreConstants.DOT).append(extension).toString();
 		File imageFile = new File(fileName);
@@ -341,10 +354,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		imageFile.delete();
 		return stream;
 	}
-	
+
 	/**
 	 * Creates InputStream from BufferedImage
 	 */
+	@Override
 	public InputStream getImageInputStream(Image image, String extension, boolean isJpg) {
 		if (image == null || extension == null) {
 			return null;
@@ -359,22 +373,24 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	/**
 	 * Generates image with Flying Saucer XHTMLRenderer
 	 */
+	@Override
 	public BufferedImage generateImage(String urlToFile, int width, int height) {
 		return generateImage(urlToFile, width, height, false);
 	}
-	
+
 	/**
 	 * Generates image with Flying Saucer XHTMLRenderer
 	 */
+	@Override
 	public BufferedImage generateImage(String urlToFile, int width, int height, boolean isJpg) {
 		if (urlToFile == null) {
 			return null;
 		}
-		
+
 		long start = System.currentTimeMillis();
 		LOGGER.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile).toString());
 		String errorMessage = "Unable to generate image with XHTMLRenderer: ";
-		
+
 		boolean useOldGenerator = true;
 		IWMainApplication app = IWMainApplication.getDefaultIWMainApplication();
 		if (app != null) {
@@ -389,7 +405,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 				}
 			}
 		}
-		
+
 		BufferedImage image = null;
 		if (useOldGenerator) {
 			try {
@@ -414,7 +430,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 				return null;
 			}
 		}
-		
+
 		if (useOldGenerator) {
 			setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
 		}
@@ -426,16 +442,17 @@ public class ImageGeneratorImpl implements ImageGenerator {
 				setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
 			}
 		}
-		
+
 		long end = System.currentTimeMillis();
 		LOGGER.info(new StringBuffer("XHTMLRenderer: success in ").append((end - start)).append(" ms: ").append(urlToFile).toString());
-		
+
 		return image;
 	}
-	
+
 	/**
 	 * Returns URL: a link to service to read generated image
 	 */
+	@Override
 	public URL generateImageURLWithExternalService(String urlToFile, int width, int height) {
 		LOGGER.info("Trying with external service: ".concat(urlToFile));
 		URL url = null;
@@ -451,10 +468,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		return url;
 	}
 
+	@Override
 	public String getFileExtension() {
 		return fileExtension;
 	}
-	
+
 	/**
 	 * Gets InputStream of generated image
 	 * @param urlToFile - where tu find a web file
@@ -464,7 +482,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	 */
 	private InputStream getImageInputStream(String urlToFile, int width, int height, boolean makeJpg, float quality) {
 		long start = System.currentTimeMillis();
-		
+
 		List<Dimension> dimensions = new ArrayList<Dimension>(1);
 		dimensions.add(new Dimension(width, height));
 		List<BufferedImage> images = generatePreviews(urlToFile, dimensions, makeJpg, quality);
@@ -474,43 +492,28 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		if (images.size() == 0) {
 			return null;
 		}
-		
+
 		BufferedImage image = images.get(0);
 		if (image == null) {
 			return null;
 		}
-		
+
 		InputStream stream = null;
 		stream = getImageInputStream(image, getFileExtension());
 		if (stream == null) {
 			return null;
 		}
-			
+
 		long end = System.currentTimeMillis();
 		LOGGER.info(new StringBuffer("Got image InputStream in ").append((end - start)).append(" ms: ").append(urlToFile).toString());
-			
+
 		return stream;
 	}
 
 	private void setFileExtension(String fileExtension) {
 		this.fileExtension = fileExtension.toLowerCase();
 	}
-	
-	private IWSlideService getSlideService() {
-		initializeSlideService(IWMainApplication.getDefaultIWApplicationContext());
-		return service;
-	}
-	
-	private synchronized void initializeSlideService(IWApplicationContext iwac) {
-		if (service == null) {
-			try {
-				service = IBOLookup.getServiceInstance(iwac, IWSlideService.class);
-			} catch (IBOLookupException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
+
 	private synchronized void initializeImageEncoder(IWApplicationContext iwac) {
 		if (encoder == null) {
 			try {
@@ -520,12 +523,12 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			}
 		}
 	}
-	
+
 	private ImageEncoder getImageEncoder() {
 		initializeImageEncoder(IWMainApplication.getDefaultIWApplicationContext());
 		return encoder;
 	}
-	
+
 	private ScalingOptions getScalingOptions(boolean isJpg) {
 		DownscaleQuality quality = DownscaleQuality.LOW_QUALITY;
 		if (isJpg) {
@@ -548,19 +551,26 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
 			isExternalService = true;
 		}
-		
+
 		return generatedImage;
 	}
-	
+
+	private RepositoryService getRepositoryService() {
+		if (repository == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return repository;
+	}
+
 	private boolean uploadImage(String uploadDirectory, String fullName, InputStream stream) {
 		boolean result = true;
 		try {
-			if (!getSlideService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream,
-					new StringBuffer(MIME_TYPE).append(getFileExtension()).toString(), true)) {
+			if (!getRepositoryService().uploadFileAndCreateFoldersFromStringAsRoot(uploadDirectory, fullName, stream,
+					new StringBuffer(MIME_TYPE).append(getFileExtension()).toString())) {
 				LOGGER.warning("Error uploading file: ".concat(fullName));
 				result = false;
 			}
-		} catch(RemoteException e) {
+		} catch(RepositoryException e) {
 			e.printStackTrace();
 			return false;
 		} finally {
@@ -568,7 +578,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		}
 		return result;
 	}
-	
+
 	private boolean areValidParameters(List<String> urls, List<String> names, String directory, int width, int height) {
 		if (urls == null || names == null) {
 			return false;
@@ -584,7 +594,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		}
 		return true;
 	}
-	
+
 	private boolean isValidInt(int number) {
 		if (number > 0 && number <= Integer.MAX_VALUE) {
 			return true;
