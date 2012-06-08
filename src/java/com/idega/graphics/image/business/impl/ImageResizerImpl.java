@@ -10,13 +10,14 @@ import javax.imageio.ImageIO;
 
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.graphics.image.business.ImageResizer;
+import com.idega.util.StringUtil;
 import com.mortennobel.imagescaling.ResampleOp;
 
 public class ImageResizerImpl extends DefaultSpringBean implements ImageResizer {
 
 	@Override
 	public OutputStream getScaledImage(int newWidth, int newHeight, InputStream streamToImage, String imageType) throws IOException {
-		if (newWidth < 0 || newHeight < 0 || streamToImage == null) {
+		if (newWidth < 0 || newHeight < 0 || streamToImage == null || StringUtil.isEmpty(imageType)) {
 			getLogger().warning("Invalid parameters!");
 			return null;
 		}
