@@ -414,13 +414,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 				LOGGER.log(Level.WARNING, errorMessage.concat(urlToFile), e);
 				return null;
 			}
-		}
-		else {
+		} else {
 			Java2DRenderer renderer = new Java2DRenderer(urlToFile, width, height);
 			if (isJpg) {
 				renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
-			}
-			else {
+			} else {
 				renderer.setBufferedImageType(BufferedImage.TYPE_INT_ARGB);
 			}
 			try {
@@ -433,12 +431,10 @@ public class ImageGeneratorImpl implements ImageGenerator {
 
 		if (useOldGenerator) {
 			setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
-		}
-		else {
+		} else {
 			if (isJpg) {
 				setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
-			}
-			else {
+			} else {
 				setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
 			}
 		}
