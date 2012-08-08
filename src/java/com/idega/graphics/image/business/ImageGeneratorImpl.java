@@ -37,6 +37,7 @@ import org.xhtmlrenderer.util.ScalingOptions;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.core.builder.data.ICDomain;
 import com.idega.graphics.util.GraphicsConstants;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
@@ -385,6 +386,15 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	public BufferedImage generateImage(String urlToFile, int width, int height, boolean isJpg) {
 		if (urlToFile == null) {
 			return null;
+		}
+		if (!urlToFile.startsWith("http")) {
+			ICDomain domain = IWMainApplication.getDefaultIWApplicationContext().getDomain();
+			String url = domain == null ? null : domain.getURL();
+			if (!StringUtil.isEmpty(url)) {
+				if (url.endsWith(CoreConstants.SLASH))
+					url = url.substring(0, url.length() - 1);
+				urlToFile = url + urlToFile;
+			}
 		}
 
 		long start = System.currentTimeMillis();
