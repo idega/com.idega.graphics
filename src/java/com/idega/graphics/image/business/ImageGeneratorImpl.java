@@ -34,6 +34,7 @@ import org.xhtmlrenderer.util.DownscaleQuality;
 import org.xhtmlrenderer.util.FSImageWriter;
 import org.xhtmlrenderer.util.ImageUtil;
 import org.xhtmlrenderer.util.ScalingOptions;
+import org.xhtmlrenderer.util.XRLog;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -401,21 +402,11 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		LOGGER.info(new StringBuffer("Trying with XHTMLRenderer: ").append(urlToFile).toString());
 		String errorMessage = "Unable to generate image with XHTMLRenderer: ";
 
-		boolean useOldGenerator = true;
-		IWMainApplication app = IWMainApplication.getDefaultIWMainApplication();
-		if (app != null) {
-			IWMainApplicationSettings settings = app.getSettings();
-			if (settings != null) {
-				String value = settings.getProperty(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR);
-				if (value == null) {
-					settings.setProperty(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR, Boolean.TRUE.toString());
-				}
-				else {
-					useOldGenerator = Boolean.TRUE.toString().equalsIgnoreCase(value);
-				}
-			}
-		}
+		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+		boolean useOldGenerator = settings.getBoolean(CoreConstants.APPLICATION_PROPERTY_TO_USE_OLD_THEME_PREVIEW_GENERATOR, Boolean.FALSE);
 
+		XRLog.setLoggingEnabled(true);
+		XRLog.setLevel(XRLog.EXCEPTION, Level.WARNING);
 		BufferedImage image = null;
 		if (useOldGenerator) {
 			try {
@@ -426,11 +417,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			}
 		} else {
 			Java2DRenderer renderer = new Java2DRenderer(urlToFile, width, height);
-			if (isJpg) {
-				renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
-			} else {
-				renderer.setBufferedImageType(BufferedImage.TYPE_INT_ARGB);
-			}
+			renderer.setBufferedImageType(isJpg ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB);
 			try {
 				image = renderer.getImage();
 			} catch (Exception e) {
@@ -439,15 +426,8 @@ public class ImageGeneratorImpl implements ImageGenerator {
 			}
 		}
 
-		if (useOldGenerator) {
-			setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
-		} else {
-			if (isJpg) {
-				setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
-			} else {
-				setFileExtension(GraphicsConstants.PNG_FILE_NAME_EXTENSION);
-			}
-		}
+		setFileExtension(useOldGenerator ? GraphicsConstants.PNG_FILE_NAME_EXTENSION :
+								   isJpg ? GraphicsConstants.JPG_FILE_NAME_EXTENSION : GraphicsConstants.PNG_FILE_NAME_EXTENSION);
 
 		long end = System.currentTimeMillis();
 		LOGGER.info(new StringBuffer("XHTMLRenderer: success in ").append((end - start)).append(" ms: ").append(urlToFile).toString());
@@ -465,8 +445,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		try {
 			url = new URL(new StringBuffer(EXTERNAL_SERVICE).append(urlToFile).append(IMAGE_WIDTH_PARAM).append(width)
 					.append(IMAGE_HEIGHT_PARAM).append(height).toString());
-		}
-		catch (MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			LOGGER.log(Level.WARNING, "Unable to generate image with external service: ".concat(urlToFile), e);
 			return null;
 		}
