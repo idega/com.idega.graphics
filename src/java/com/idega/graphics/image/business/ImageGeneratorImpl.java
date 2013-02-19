@@ -15,8 +15,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,14 +55,9 @@ public class ImageGeneratorImpl implements ImageGenerator {
 
 	private static final Logger LOGGER = Logger.getLogger(ImageGeneratorImpl.class.getName());
 
-	private static final String EXTERNAL_SERVICE = "http://webdesignbook.net/snapper.php?url=";
-	private static final String IMAGE_WIDTH_PARAM = "&w=";
-	private static final String IMAGE_HEIGHT_PARAM = "&h=";
 	private static final String MIME_TYPE = "image/";
 
 	private String fileExtension = null;
-
-	private boolean isExternalService = false;
 
 	private ImageEncoder encoder = null;
 	private Random generator = null;
@@ -226,8 +219,6 @@ public class ImageGeneratorImpl implements ImageGenerator {
         	}
         }
 
-		isExternalService = false;
-
 		long end = System.currentTimeMillis();
 		LOGGER.info(new StringBuffer("Got images in ").append((end - start)).append(" ms: ").append(url).toString());
 
@@ -248,19 +239,14 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		InputStream stream = getImageInputStream(url, width, height, makeJpg, quality);
 		String fullName = new StringBuffer(fileName).append(".").append(getFileExtension()).toString();
 		if (stream == null) {
-			LOGGER.warning("Error getting InputStream");
+			LOGGER.warning("Error getting InputStream to " + url);
 			return false;
-		}
-
-		if (isExternalService) {
-			return uploadImage(uploadDirectory, fullName, stream);
 		}
 
 		if (encode) {
 			result = encodeAndUploadImage(uploadDirectory, fullName, new StringBuffer(MIME_TYPE).append(getFileExtension()).toString(),
 					stream, width, height);
-		}
-		else {
+		} else {
 			return uploadImage(uploadDirectory, fullName, stream);
 		}
 
@@ -435,24 +421,6 @@ public class ImageGeneratorImpl implements ImageGenerator {
 		return image;
 	}
 
-	/**
-	 * Returns URL: a link to service to read generated image
-	 */
-	@Override
-	public URL generateImageURLWithExternalService(String urlToFile, int width, int height) {
-		LOGGER.info("Trying with external service: ".concat(urlToFile));
-		URL url = null;
-		try {
-			url = new URL(new StringBuffer(EXTERNAL_SERVICE).append(urlToFile).append(IMAGE_WIDTH_PARAM).append(width)
-					.append(IMAGE_HEIGHT_PARAM).append(height).toString());
-		} catch (MalformedURLException e) {
-			LOGGER.log(Level.WARNING, "Unable to generate image with external service: ".concat(urlToFile), e);
-			return null;
-		}
-		LOGGER.info("External service: success: ".concat(urlToFile));
-		return url;
-	}
-
 	@Override
 	public String getFileExtension() {
 		return fileExtension;
@@ -524,18 +492,8 @@ public class ImageGeneratorImpl implements ImageGenerator {
 
 	private BufferedImage getImage(String urlToFile, int width, int height, boolean isJpg) {
 		BufferedImage generatedImage = generateImage(urlToFile, width, height, isJpg);
-		if (generatedImage == null) {
-			//	Failed to generate image, trying with external service
-			URL url = generateImageURLWithExternalService(urlToFile, width, height);
-			try {
-				generatedImage = ImageIO.read(url);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return null;
-			}
-			setFileExtension(GraphicsConstants.JPG_FILE_NAME_EXTENSION);
-			isExternalService = true;
-		}
+		if (generatedImage == null)
+			LOGGER.warning("Failed to generate image for " + urlToFile);
 
 		return generatedImage;
 	}

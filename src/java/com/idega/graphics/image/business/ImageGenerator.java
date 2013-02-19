@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.List;
 
 public interface ImageGenerator {
@@ -29,10 +28,6 @@ public interface ImageGenerator {
 	 */
 	public BufferedImage generateImage(String urlToFile, int width, int height, boolean isJpg);
 
-	/**
-	 * @see ImageGeneratorImpl#generateImageURLWithExternalService(String, int, int)
-	 */
-	public URL generateImageURLWithExternalService(String urlToFile, int width, int height);
 
 	/**
 	 * @see ImageGeneratorImpl#getFileExtension()
