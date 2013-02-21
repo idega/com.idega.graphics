@@ -408,7 +408,17 @@ public class ImageGeneratorImpl implements ImageGenerator {
 				image = renderer.getImage();
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, errorMessage.concat(urlToFile), e);
-				return null;
+
+				try {
+					// This is only for the cases when XHTML renderer cannot 
+					// render the template icon. Fallback to unknown picture
+					// thus making the theme still usable.
+					image = ImageIO.read(Thread.currentThread()
+						.getContextClassLoader()
+						.getResourceAsStream("resources/unknown.png"));
+				} catch (Exception inner) {
+					throw new RuntimeException(inner);
+				}
 			}
 		}
 
