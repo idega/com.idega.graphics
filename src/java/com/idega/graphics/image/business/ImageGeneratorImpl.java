@@ -152,7 +152,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 	}
 
 	/**
-	 * Encodes image (from InputStream) and uploads to Slide
+	 * Encodes image (from InputStream) and uploads to repository
 	 */
 	@Override
 	public boolean encodeAndUploadImage(String uploadDirectory, String fileName, String mimeType, InputStream stream, int width, int height) {
@@ -410,7 +410,7 @@ public class ImageGeneratorImpl implements ImageGenerator {
 				LOGGER.log(Level.WARNING, errorMessage.concat(urlToFile), e);
 
 				try {
-					// This is only for the cases when XHTML renderer cannot 
+					// This is only for the cases when XHTML renderer cannot
 					// render the template icon. Fallback to unknown picture
 					// thus making the theme still usable.
 					image = ImageIO.read(Thread.currentThread()
