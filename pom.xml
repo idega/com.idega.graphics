@@ -109,10 +109,15 @@
       <version>1.6</version>
       <type>jar</type>
     </dependency>
-	<dependency>
-      <groupId>org.xhtmlrenderer</groupId>
-      <artifactId>flying-saucer-core</artifactId>
-	  <version>9.0.1</version>
+    <dependency>
+      <groupId>flyingsaucer</groupId>
+      <artifactId>core-renderer</artifactId>
+	  <version>${flyingsaucer-core-renderer-version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>flyingsaucer</groupId>
+    	<artifactId>minium</artifactId>
+    	<version>${flyingsaucer-minium-version}</version>
     </dependency>
     <dependency>
     	<groupId>itextpdf</groupId>
