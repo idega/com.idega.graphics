@@ -10,7 +10,10 @@ import com.idega.business.SpringBeanName;
 public interface ImageResizer {
 
 	public OutputStream getScaledImage(int newWidth, int newHeight, InputStream streamToImage, String imageType) throws IOException;
-	
-	public OutputStream getScaledImage(int newWidth, int newHeight, InputStream streamToImage, String imageType,OutputStream outputStream) throws IOException;
+
+	public OutputStream getScaledImage(int minSize, InputStream streamToImage, String imageType) throws IOException;
+
+	public OutputStream getScaledImage(int newWidth, int newHeight, InputStream streamToImage, String imageType, OutputStream outputStream)
+			throws IOException;
 
 }
