@@ -21,9 +21,7 @@ public class ImageResizerImpl extends DefaultSpringBean implements ImageResizer 
 	}
 
 	@Override
-	public OutputStream getScaledImage(int newWidth, int newHeight,
-			InputStream streamToImage, String imageType,
-			OutputStream outputStream) throws IOException {
+	public <O extends OutputStream> O getScaledImage(int newWidth, int newHeight, InputStream streamToImage, String imageType, O outputStream) throws IOException {
 		if (newWidth < 0 || newHeight < 0 || streamToImage == null || StringUtil.isEmpty(imageType)) {
 			getLogger().warning("Invalid parameters!");
 			return null;
