@@ -18,7 +18,6 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.graphics.image.business.ImageResizer;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
-import com.idega.util.ArrayUtil;
 import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.StringUtil;
@@ -123,7 +122,17 @@ public class ImageResizerImpl extends DefaultSpringBean implements ImageResizer 
 					options.add(Scalr.OP_BRIGHTER);
 				}
 				String method = settings.getProperty("graphics.resizer_method", Method.SPEED.name());
-				scaled = Scalr.resize(image, Method.valueOf(method), newWidth, newHeight, ArrayUtil.convertListToArray(options));
+				int size = options == null ? 0 : options.size();
+				BufferedImageOp [] opts;
+				if(size > 0){
+					opts = new BufferedImageOp[options.size()];
+					for(int i =0;i<size;i++){
+						opts[i] = options.get(i);
+					}
+				}else{
+					opts = new BufferedImageOp[0];
+				}
+				scaled = Scalr.resize(image, Method.valueOf(method), newWidth, newHeight, opts);
 			} else {
 				scaled = image;
 			}
