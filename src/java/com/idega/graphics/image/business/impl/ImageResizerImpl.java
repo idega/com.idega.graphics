@@ -22,6 +22,7 @@ import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.util.ArrayUtil;
 import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
+import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
 public class ImageResizerImpl extends DefaultSpringBean implements ImageResizer {
@@ -123,9 +124,13 @@ public class ImageResizerImpl extends DefaultSpringBean implements ImageResizer 
 				if (settings.getBoolean("graphics.resizer_brighter", Boolean.TRUE)) {
 					options.add(Scalr.OP_BRIGHTER);
 				}
+				Method method = Method.valueOf(settings.getProperty("graphics.resizer_method", Method.SPEED.name()));
 				Mode resizeMode = Mode.valueOf(settings.getProperty("graphics.resizer_mode", Mode.AUTOMATIC.name()));
-				String method = settings.getProperty("graphics.resizer_method", Method.SPEED.name());
-				scaled = Scalr.resize(image, Method.valueOf(method), resizeMode, newWidth, newHeight, ArrayUtil.convertListToArray(options));
+				if (ListUtil.isEmpty(options)) {
+					scaled = Scalr.resize(image, method, resizeMode, newWidth, newHeight);
+				} else {
+					scaled = Scalr.resize(image, method, resizeMode, newWidth, newHeight, ArrayUtil.convertListToArray(options));
+				}
 			} else {
 				scaled = image;
 			}
