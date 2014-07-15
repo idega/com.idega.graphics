@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
+import org.imgscalr.Scalr.Mode;
 
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.graphics.image.business.ImageResizer;
@@ -122,8 +123,9 @@ public class ImageResizerImpl extends DefaultSpringBean implements ImageResizer 
 				if (settings.getBoolean("graphics.resizer_brighter", Boolean.TRUE)) {
 					options.add(Scalr.OP_BRIGHTER);
 				}
+				Mode resizeMode = Mode.valueOf(settings.getProperty("graphics.resizer_mode", Mode.AUTOMATIC.name()));
 				String method = settings.getProperty("graphics.resizer_method", Method.SPEED.name());
-				scaled = Scalr.resize(image, Method.valueOf(method), newWidth, newHeight, ArrayUtil.convertListToArray(options));
+				scaled = Scalr.resize(image, Method.valueOf(method), resizeMode, newWidth, newHeight, ArrayUtil.convertListToArray(options));
 			} else {
 				scaled = image;
 			}
