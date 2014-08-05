@@ -1,5 +1,6 @@
 package com.idega.graphics.image.business;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -9,6 +10,7 @@ import com.idega.business.SpringBeanName;
 public interface ImageResizer {
 
 	public InputStream getScaledImage(int newWidth, int newHeight, InputStream streamToImage, String imageType) throws IOException;
+	public ByteArrayOutputStream getScaledImage(int newWidth, int newHeight, InputStream streamToImage, String imageType, ByteArrayOutputStream output) throws IOException;
 
 	public InputStream getScaledImage(int minSize, InputStream streamToImage, String imageType) throws IOException;
 
