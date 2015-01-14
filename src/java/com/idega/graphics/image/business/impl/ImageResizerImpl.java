@@ -19,7 +19,6 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.graphics.image.business.ImageResizer;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
-import com.idega.util.ArrayUtil;
 import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
@@ -129,7 +128,14 @@ public class ImageResizerImpl extends DefaultSpringBean implements ImageResizer 
 				if (ListUtil.isEmpty(options)) {
 					scaled = Scalr.resize(image, scalingMethod, resizeMode, newWidth, newHeight);
 				} else {
-					scaled = Scalr.resize(image, scalingMethod, resizeMode, newWidth, newHeight, ArrayUtil.convertListToArray(options));
+					BufferedImageOp[] opts = new BufferedImageOp[options.size()];
+					{
+					int i = 0;
+					for(BufferedImageOp opt : options){
+						opts[i++] = opt;
+					}
+					}
+					scaled = Scalr.resize(image, scalingMethod, resizeMode, newWidth, newHeight, opts);
 				}
 			} else {
 				scaled = image;
