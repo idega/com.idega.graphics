@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,6 +29,8 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 	protected HttpServletRequest request;
 	protected ServletOutputStream output = null;
 	protected String outputFormat=SVGFilter.FORMAT_PNG;
+
+	private WriteListener writeListener;
 
 	public SVGFilterResponseStream(HttpServletResponse response,HttpServletRequest request,String outputFormat) throws IOException {
 		super();
@@ -163,5 +166,15 @@ public class SVGFilterResponseStream extends ServletOutputStream {
 
 	public void reset() {
 		//noop
+	}
+
+	@Override
+	public boolean isReady() {
+		return !closed();
+	}
+
+	@Override
+	public void setWriteListener(WriteListener writeListener) {
+		this.writeListener = writeListener;
 	}
 }
